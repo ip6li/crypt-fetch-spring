@@ -40,7 +40,6 @@ public final class Configuration extends ConfigurationBase {
 
     @Override
     protected void init() {
-
         config.setProperty("js.url", readFromVMoptions("url", "index"));
         config.setProperty("js.hash", "SHA-256");
 

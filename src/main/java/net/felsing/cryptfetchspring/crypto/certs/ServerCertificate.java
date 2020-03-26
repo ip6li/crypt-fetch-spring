@@ -21,6 +21,7 @@ package net.felsing.cryptfetchspring.crypto.certs;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import java.io.IOException;
 import java.security.*;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -42,6 +43,10 @@ public final class ServerCertificate {
         return serverCertificate;
     }
 
+    public String getServerCertificatePEM () throws CertificateEncodingException, IOException {
+
+        return PemUtils.encodeObjectToPEM(serverCertificate);
+    }
 
     public void generate (CA ca, String dn, Certificates.KeyType mode, int validForDays) {
 
