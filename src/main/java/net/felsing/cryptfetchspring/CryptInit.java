@@ -7,12 +7,11 @@ import net.felsing.cryptfetchspring.crypto.certs.KeyStoreUtils;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
 import net.felsing.cryptfetchspring.crypto.util.URL;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -31,6 +30,7 @@ public class CryptInit {
     private static String servletRootPath;
 
     static CA getInstance (String rootPath) throws Exception {
+        assert ProviderLoader.getProviderName()!=null;
         if (ca == null) {
             servletRootPath = rootPath;
             ca = new CA();
@@ -41,11 +41,11 @@ public class CryptInit {
 
     private static void initPKIinfrastructure () throws Exception {
         properties = new Configuration().getConfig();
-
+        final File caFile = new File(properties.getProperty("caFile"));
         final String keyStorePassword = properties.getProperty("keyStorePassword");
         Certificates.KeyType mode = Certificates.KeyType.valueOf(properties.getProperty("keyMode"));
 
-        if (properties.getProperty("caFile")==null) {
+        if (!caFile.exists()) {
             String caDN = properties.getProperty("ca.dnPrefix") +
                     " " + mode.toString() + "," +
                     properties.getProperty("ca.dnSuffix");
@@ -55,6 +55,8 @@ public class CryptInit {
                     caDN,
                     Integer.valueOf(properties.getProperty("ca.days"))
             );
+
+            ca.saveCertificationAuthorityKeystore(properties.getProperty("caFile"), keyStorePassword);
         } else {
             String p12rsa = properties.getProperty("caFile");
             ca.loadCertificationAuthorityKeystore(p12rsa, keyStorePassword);
@@ -100,14 +102,18 @@ public class CryptInit {
     private static void loadCertificate (ServerCertificate cert, String keyStoreFile, String keyStorePassword)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
 
-        try {
-            cert.loadServerCertificate(
-                    keyStoreFile,
-                    keyStorePassword
-            );
-            logger.info("Using existing certificate " + keyStoreFile);
-        } catch (Exception e) {
-            e.printStackTrace();
+        final File fKeyStore = new File(keyStoreFile);
+        if (fKeyStore.exists()) {
+            try {
+                cert.loadServerCertificate(
+                        keyStoreFile,
+                        keyStorePassword
+                );
+                logger.info("Using existing certificate " + keyStoreFile);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
             generateNewCertificate(cert, keyStoreFile, keyStorePassword);
         }
     }

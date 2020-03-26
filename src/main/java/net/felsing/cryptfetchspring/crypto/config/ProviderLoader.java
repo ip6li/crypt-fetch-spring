@@ -2,7 +2,10 @@ package net.felsing.cryptfetchspring.crypto.config;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import java.security.Provider;
+import java.security.Security;
 
 
 public final class ProviderLoader {
@@ -16,15 +19,15 @@ public final class ProviderLoader {
     }
 
 
-    private static void load () {
-
-            loadBC();
+    private static void load() {
+        loadBC();
     }
 
 
-    private static void loadBC () {
+    private static void loadBC() {
 
         provider = new org.bouncycastle.jce.provider.BouncyCastleProvider();
+        Security.addProvider(provider);
         logger.info("loaded provider " + getProviderName());
     }
 

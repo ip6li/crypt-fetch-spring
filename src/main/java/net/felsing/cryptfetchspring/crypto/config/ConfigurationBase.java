@@ -58,7 +58,7 @@ public abstract class ConfigurationBase {
      */
     public JsonObject getConfigJson() {
         final JsonObject jsonObject = new JsonObject();
-        Enumeration e = config.propertyNames();
+        Enumeration<?> e = config.propertyNames();
         while (e.hasMoreElements()) {
             String key = (String) e.nextElement();
             if (key.matches("^js\\..*")) {
@@ -105,7 +105,7 @@ public abstract class ConfigurationBase {
         config.setProperty(Constants.p_serverKeystoreFile,
                 readFromVMoptions(
                         Constants.p_serverKeystoreFile,
-                        "/WEB-INF/classes/server.p12"
+                        "server.p12"
                 )
         );
 
@@ -119,7 +119,7 @@ public abstract class ConfigurationBase {
         config.setProperty(Constants.p_signerKeystoreFile,
                 readFromVMoptions(
                         Constants.p_signerKeystoreFile,
-                        "/WEB-INF/classes/signer.p12"
+                        "signer.p12"
                 )
         );
 
