@@ -6,22 +6,28 @@ import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
-import java.security.PublicKey;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.security.PrivateKey;
-import java.security.SecureRandom;
 import java.security.cert.*;
 
-
+/****************************************************************************************************************
+ * Utility class which provides useful tools to convert certificates and keys in PEM format
+ * from and to Java classes
+ ***************************************************************************************************************/
 public final class PemUtils {
 
 
     /**
+     * Utilities to encode different X.509/Key objects to PEM
      *
      * @param pem                   pem encoded data
      * @return                      DER encoded data
@@ -173,11 +179,49 @@ public final class PemUtils {
     }
 
 
+    /**
+     * Parses PEM encoded X.509 certificate and returns X509Certificate instance.
+     *
+     * @param pem               PEM encoded X.509 certificate
+     * @return                  X509Certificate
+     */
     public static X509Certificate getCertificateFromPem(String pem)
             throws CertificateException {
         InputStream pemstream = new ByteArrayInputStream(pem.getBytes(StandardCharsets.UTF_8));
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         return (X509Certificate) cf.generateCertificate(pemstream);
+    }
+
+
+    /**
+     * Parses PEM encoded private key and returns RSAPrivateKey instance.
+     *
+     * @param pem               PEM encoded private key
+     * @return                  RSAPrivateKey
+     */
+    public static RSAPrivateKey getPrivateKeyFromPem (String pem)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(parseDERfromPEM(pem.getBytes()));
+        return (RSAPrivateKey) kf.generatePrivate(keySpec);
+    }
+
+
+    /**
+     * Parses PEM encoded private key/certificate and
+     * returns KeyPair instance.
+     *
+     * @param pemPrivateKey     PEM encoded private key
+     * @param pemCert           PEM encoded X.509 certificate
+     * @return                  KeyPair
+     */
+    public static KeyPair getKeyPair (String pemPrivateKey, String pemCert)
+            throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException {
+        X509Certificate x509cert = getCertificateFromPem(pemCert);
+        PublicKey publicKey = x509cert.getPublicKey();
+        RSAPrivateKey privKey = getPrivateKeyFromPem(pemPrivateKey);
+
+        return new KeyPair(publicKey, privKey);
     }
 
 
@@ -199,6 +243,5 @@ public final class PemUtils {
 
         return rnd.toString();
     }
-
 
 } // class

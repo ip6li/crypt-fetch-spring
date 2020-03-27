@@ -80,7 +80,7 @@ public final class Cms {
 
         certList.add(cert);
 
-        Store certs = new JcaCertStore(certList);
+        JcaCertStore certs = new JcaCertStore(certList);
 
         DigestCalculatorProvider digProvider = new JcaDigestCalculatorProviderBuilder()
                 .setProvider(ProviderLoader.getProviderName())

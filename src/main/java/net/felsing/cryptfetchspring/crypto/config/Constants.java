@@ -23,6 +23,8 @@ public final class Constants {
     // attribute ids
     public static final String att_validated = "x509validated";
     public static final String att_error = "x509error";
+    public static final String SHA256withECDSA = "SHA256withECDSA";
+    public static final String SHA256withRSA = "SHA256withRSA";
 
     // PEM tags
     public static final String CMS_BEGIN = "-----BEGIN CMS-----";
@@ -80,4 +82,7 @@ public final class Constants {
     // for debugging
     public static boolean enableOriginatorInfo = true;
 
+    // Config hash key names
+    public static String ca = "ca";
+    public static String serverCert = "server";
 }

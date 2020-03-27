@@ -148,4 +148,10 @@ public class CryptInit {
         return serverSignerCertificate;
     }
 
+
+    public static CA getCa () {
+
+        return ca;
+    }
+
 }

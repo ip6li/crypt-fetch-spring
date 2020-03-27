@@ -103,7 +103,7 @@ public final class Signer {
                     "RSA"
             );
         } catch (Exception e) {
-            //e.printStackTrace();
+            logger.error(e);
         }
 
         if (caPrivate == null) {
@@ -199,11 +199,11 @@ public final class Signer {
         AlgorithmIdentifier digAlgId;
 
         if (caPrivateKeyAlgorithm.matches("EC.*")) {
-            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withECDSA");
+            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA256withECDSA);
             digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
             sigGen = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(asymmetricKeyParameter);
         } else if (caPrivateKeyAlgorithm.matches("RSA")) {
-            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256withRSA");
+            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA256withRSA);
             digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
             sigGen = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(asymmetricKeyParameter);
         } else {

@@ -17,12 +17,8 @@
 
 package net.felsing.cryptfetchspring.crypto.config;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.Enumeration;
 import java.util.Properties;
 
 
@@ -49,25 +45,6 @@ public abstract class ConfigurationBase {
     public Properties getConfig () {
 
         return config;
-    }
-
-
-    /**
-     * Get config as JSON object
-     * @return (JsonObject) : Config
-     */
-    public JsonObject getConfigJson() {
-        final JsonObject jsonObject = new JsonObject();
-        Enumeration<?> e = config.propertyNames();
-        while (e.hasMoreElements()) {
-            String key = (String) e.nextElement();
-            if (key.matches("^js\\..*")) {
-                String item = key.replaceAll("^js\\.", "");
-                jsonObject.add(item, new JsonPrimitive(config.getProperty(key)));
-            }
-        }
-
-        return jsonObject;
     }
 
 
