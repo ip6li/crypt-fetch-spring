@@ -28,7 +28,7 @@ public class Login implements loginIntf {
 
 
     @Override
-    public Map login(String cms) throws IOException, CMSException {
+    public Map login(String cms) {
         HashMap<String, Object> result = new HashMap<>();
 
         ServerCertificate serverCertificate = CryptInit.getServerCertificate();

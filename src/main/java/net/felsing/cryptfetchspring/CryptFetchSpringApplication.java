@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -48,16 +49,17 @@ public class CryptFetchSpringApplication {
 
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public String login(@RequestBody String request) {
-        //ToDo: getCSR, verify credentials, if ok: sign CSR and return client certificate
+    public Map login(@RequestBody String request) {
+        // getCSR, verify credentials, if ok: sign CSR and return client certificate
         Login login = new Login();
         try {
-            Map result = login.login(request);
-
+            return login.login(request);
         } catch (Exception e) {
             logger.warn(e);
+            HashMap<String, String> result = new HashMap<>();
+            result.put("error", "Login failed");
+            return result;
         }
-        return "login()";
     }
 
 
