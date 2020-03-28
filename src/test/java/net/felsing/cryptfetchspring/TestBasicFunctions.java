@@ -1,7 +1,6 @@
 package net.felsing.cryptfetchspring;
 
 import net.felsing.cryptfetchspring.crypto.certs.*;
-import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,53 +8,23 @@ import org.bouncycastle.cms.CMSSignedData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import java.io.IOException;
 import java.security.KeyPair;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.HashMap;
-import java.util.Map;
 
 
-@SpringBootTest
-class CryptFetchSpringApplicationTests {
-    private static Logger logger = LogManager.getLogger(CryptFetchSpringApplicationTests.class);
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class TestBasicFunctions {
+    private static Logger logger = LogManager.getLogger(TestBasicFunctions.class);
 
-    private static CA ca;
-    private static ServerConfig serverConfig;
-
-
-    private HashMap<String, String> genClientCertificate (String cn) throws Exception {
-        HashMap<String, String> certStore = new HashMap<>();
-        Csr request = new Csr();
-
-        String privateKey;
-        String csr;
-        String certificate;
-
-        request.createCsr(Certificates.KeyType.RSA, 2048, "CN=".concat(cn));
-        privateKey = PemUtils.encodeObjectToPEM(request.getKeyPair().getPrivate());
-        csr = PemUtils.encodeObjectToPEM(request.getCsr());
-        certStore.put("privateKey", privateKey);
-        certStore.put("csr", csr);
-
-        Signer signer = new Signer();
-        signer.setValidTo(1);
-
-        certificate = signer.signClient(csr, ca.getCaPrivateKeyPEM(), ca.getCaCertificatePEM());
-        certStore.put("certificate", certificate);
-
-        return certStore;
-    }
+    private static TestLib testLib;
 
 
     @BeforeAll
     static void initTests () {
         try {
-            ca = CryptInit.getInstance("./");
-            serverConfig = ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
+            testLib = TestLib.getInstance();
         } catch (Exception e) {
             logger.error("BeforeAll failed");
             logger.error(e);
@@ -70,8 +39,8 @@ class CryptFetchSpringApplicationTests {
 
     @Test
     void encrypt() throws Exception {
-        HashMap<String, String> clientCert1 = genClientCertificate("cert1");
-        HashMap<String, String> clientCert2 = genClientCertificate("cert2");
+        HashMap<String, String> clientCert1 = testLib.genClientCertificate("cert1");
+        HashMap<String, String> clientCert2 = testLib.genClientCertificate("cert2");
 
         String plainText = "Hello world! Umlaute: äöüÄÖÜß€";
         byte[] bPlainText = plainText.getBytes();
@@ -95,7 +64,7 @@ class CryptFetchSpringApplicationTests {
     @Test
     void sign()
             throws Exception {
-        HashMap<String, String> clientCert1 = genClientCertificate("cert1");
+        HashMap<String, String> clientCert1 = testLib.genClientCertificate("cert1");
 
         String plainText = "Hello world! Umlaute: äöüÄÖÜß€";
         byte[] bPlainText = plainText.getBytes();
@@ -105,7 +74,7 @@ class CryptFetchSpringApplicationTests {
         Cms cms = new Cms();
         CMSSignedData signedText = cms.signCmsEnveloped(keyPair, PemUtils.getCertificateFromPem(clientCert1.get("certificate")), bPlainText);
 
-        Cms.Result result = cms.verifyCmsSignature(signedText, ca.getCaX509Certificate());
+        Cms.Result result = cms.verifyCmsSignature(signedText, testLib.getCaCertificate());
         logger.info("[sign] isVerifyOk:  ".concat(Boolean.toString(result.isVerifyOk())));
         logger.info("[sign] signed Text: ".concat(new String(result.getContent())));
         int[] count = new int[1];
@@ -118,10 +87,6 @@ class CryptFetchSpringApplicationTests {
             }
         });
         assert result.isVerifyOk();
-    }
-
-    @Test
-    void contextLoads() {
     }
 
 }
