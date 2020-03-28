@@ -2,20 +2,20 @@ package net.felsing.cryptfetchspring.crypto.util;
 
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
+import java.io.*;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.*;
 
@@ -24,7 +24,7 @@ import java.security.cert.*;
  * from and to Java classes
  ***************************************************************************************************************/
 public final class PemUtils {
-
+    private static Logger logger = LogManager.getLogger(PemUtils.class);
 
     /**
      * Utilities to encode different X.509/Key objects to PEM
@@ -242,6 +242,31 @@ public final class PemUtils {
         }
 
         return rnd.toString();
+    }
+
+
+    /**
+     * Converts PEM encoded PKCS#10 request to PKCS10CertificationRequest
+     *
+     * @param pem               PEM encoded PKCS#10 request
+     * @return                  PKCS10CertificationRequest or Exception
+     */
+    public static PKCS10CertificationRequest convertPemToPKCS10CertificationRequest(String pem)
+            throws IOException {
+        PKCS10CertificationRequest csr = null;
+        ByteArrayInputStream pemStream;
+        pemStream = new ByteArrayInputStream(pem.getBytes(StandardCharsets.UTF_8));
+
+        Reader pemReader = new BufferedReader(new InputStreamReader(pemStream));
+        PEMParser pemParser = new PEMParser(pemReader);
+
+        Object parsedObj = pemParser.readObject();
+
+        if (parsedObj instanceof PKCS10CertificationRequest) {
+            csr = (PKCS10CertificationRequest) parsedObj;
+        }
+
+        return csr;
     }
 
 } // class

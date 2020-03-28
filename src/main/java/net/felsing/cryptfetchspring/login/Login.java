@@ -5,13 +5,11 @@ import net.felsing.cryptfetchspring.CryptInit;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
+import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.operator.OperatorCreationException;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -26,10 +24,13 @@ import java.util.Map;
 public class Login implements loginIntf {
     private static Logger logger = LogManager.getLogger(Login.class);
 
+    final private static String sFalse = Boolean.toString(false);
+    final private static String sTrue = Boolean.toString(true);
+
 
     @Override
-    public Map login(String cms) {
-        HashMap<String, Object> result = new HashMap<>();
+    public HashMap<String, String> login(String cms) {
+        HashMap<String, String> result = new HashMap<>();
 
         ServerCertificate serverCertificate = CryptInit.getServerCertificate();
         KeyPair keyPair = serverCertificate.getServerKeyPair();
@@ -39,38 +40,75 @@ public class Login implements loginIntf {
         try {
             byte[] decrypted = encryptAndDecrypt.decrypt(keyPair.getPrivate(), certificate, cms.getBytes());
             ObjectMapper objectMapper = new ObjectMapper();
-            Map unparsedCredentials = objectMapper.readValue(decrypted, Map.class);
-            HashMap<String, String> credentials = new HashMap<>(unparsedCredentials);
 
+            // credentials contains unvalidated, client provided data which may
+            // contain malicious content.
+            HashMap<String, String> credentials = new HashMap<>();
+            objectMapper.readValue(decrypted, HashMap.class).forEach((k, v) -> {
+                if (k instanceof String && v instanceof String) {
+                    credentials.put((String) k, (String) v);
+                }
+            });
             return execLogin(credentials);
+
         } catch (IOException | CMSException e) {
             logger.error(e);
-            result.put("authenticated", false);
+            result.put("authenticated", sFalse);
         }
         return result;
     }
 
 
-    private Map<String, Object> execLogin(Map<String, String> credentials) {
-        HashMap<String, Object> result = new HashMap<>();
-        String username = credentials.get("username");
-        if (validateCredentials(username, credentials.get("password"))) {
-            result.put("authenticated", true);
+    private HashMap<String, String> execLogin(Map<String, String> credentials) {
+        // credentials contains unvalidated, client provided data which may
+        // contain malicious content. Do not use w/o validation!
+
+        HashMap<String, String> result = new HashMap<>();
+
+        String username;
+        if (validate("username", credentials.get("username"))) {
+            username = credentials.get("username");
+        } else {
+            result.put("authenticated", sFalse);
+            return result;
+        }
+
+        String password;
+        if (validate("password", credentials.get("password"))) {
+            password = credentials.get("password");
+        } else {
+            result.put("authenticated", sFalse);
+            return result;
+        }
+
+        String pkcs10;
+        if (validate("csr", credentials.get("csr"))) {
+            pkcs10 = credentials.get("csr");
+        } else {
+            result.put("authenticated", sFalse);
+            return result;
+        }
+
+        if (validateCredentials(username, password)) {
             try {
-                result.put("certificate", sign("CN=" + username, credentials.get("csr")));
+                result.put("certificate", sign("CN=" + username, pkcs10));
+                result.put("authenticated", sTrue);
             } catch (Exception e) {
                 logger.error("Cannot sign certificate");
-                result.put("authenticated", false);
+                result.put("authenticated", sFalse);
             }
         } else {
-            result.put("authenticated", false);
+            result.put("authenticated", sFalse);
         }
         return result;
     }
 
 
     private boolean validateCredentials(String username, String password) {
-        return true;
+
+        // Test: Validates id username and password are not empty
+        // In production environments this should ask a database LDAP or whatever
+        return (!username.isEmpty() && !password.isEmpty());
     }
 
 
@@ -82,32 +120,52 @@ public class Login implements loginIntf {
     }
 
 
-    private HashMap<String, String> validate (Map hostileData) {
-        HashMap<String, String> cleanedData = new HashMap<>();
-        hostileData.forEach((k, v) -> {
-            if (k instanceof String && v instanceof String) {
-                if (validate(k, v)) {
-                    cleanedData.put((String) k, (String) v);
-                }
-            }
-        });
+    private boolean validatePkcs10 (String pkcs10pem) {
+        boolean ok = false;
+        try {
+            PemUtils.convertPemToPKCS10CertificationRequest(pkcs10pem);
+            ok = true;
+        } catch (IOException e) {
+            logger.error(e);
+        }
 
-        return cleanedData;
+        return ok;
     }
 
 
-    private boolean validate (Object k, Object v) {
+    private boolean validate(Object k, Object v) {
         String keyPattern = "^a-z{2,32}$";
-        String valuePattern = "^(a-z|A-Z|0.9){2,32}$";
-        String passwordPattern = "^(a-z|A-Z|0.9){2,1024}$";
+        String valuePattern = "^(a-z|A-Z|0-9){2,32}$";
+        String passwordPattern = "^(a-z|A-Z|0-9|[-=]){6,1024}$";
+
         boolean ok = false;
-        if (k instanceof String && v instanceof String) {
-            String pattern = valuePattern;
-            if (k.equals("password")) { pattern = passwordPattern; }
-            if (((String) k).matches(keyPattern) && ((String) v).matches(pattern)) {
+
+        String key;
+        if (k instanceof String && ((String) k).matches(keyPattern)) {
+            key = (String) k;
+        } else {
+            return false;
+        }
+
+        String value;
+        if (v instanceof String) {
+            value = (String) v;
+        } else {
+            return false;
+        }
+
+        String pattern = valuePattern;
+        if (key.equals("password")) {
+            pattern = passwordPattern;
+        }
+        if (key.equals("csr")) {
+            ok = validatePkcs10(value);
+        } else {
+            if (value.matches(pattern)) {
                 ok = true;
             }
         }
+
         return ok;
     }
 
