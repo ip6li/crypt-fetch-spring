@@ -45,8 +45,7 @@ public class Login implements loginIntf {
 
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
         try {
-            logger.info("[login] cms: " + cms);
-            byte[] decrypted = encryptAndDecrypt.decrypt(keyPair.getPrivate(), certificate, PemUtils.parseDERfromPEM(cms.getBytes()));
+            byte[] decrypted = encryptAndDecrypt.decrypt(keyPair.getPrivate(), certificate, cms);
             ObjectMapper objectMapper = new ObjectMapper();
 
             // credentials contains unvalidated, client provided data which may
@@ -57,6 +56,7 @@ public class Login implements loginIntf {
                     credentials.put((String) k, (String) v);
                 }
             });
+
             return execLogin(credentials);
 
         } catch (IOException | CMSException e) {
@@ -77,6 +77,7 @@ public class Login implements loginIntf {
         if (validate("username", credentials.get("username"))) {
             username = credentials.get("username");
         } else {
+            logger.warn("username validation failed");
             result.put("authenticated", sFalse);
             return result;
         }
@@ -85,6 +86,7 @@ public class Login implements loginIntf {
         if (validate("password", credentials.get("password"))) {
             password = credentials.get("password");
         } else {
+            logger.warn("password validation failed");
             result.put("authenticated", sFalse);
             return result;
         }
@@ -93,6 +95,7 @@ public class Login implements loginIntf {
         if (validate("csr", credentials.get("csr"))) {
             pkcs10 = credentials.get("csr");
         } else {
+            logger.warn("csr validation failed");
             result.put("authenticated", sFalse);
             return result;
         }
@@ -134,7 +137,7 @@ public class Login implements loginIntf {
             PemUtils.convertPemToPKCS10CertificationRequest(pkcs10pem);
             ok = true;
         } catch (IOException e) {
-            logger.error(e);
+            logger.warn("CSR validation failed");
         }
 
         return ok;
@@ -142,9 +145,9 @@ public class Login implements loginIntf {
 
 
     private boolean validate(Object k, Object v) {
-        String keyPattern = "^a-z{2,32}$";
-        String valuePattern = "^(a-z|A-Z|0-9){2,32}$";
-        String passwordPattern = "^(a-z|A-Z|0-9|[-=]){6,1024}$";
+        String keyPattern = "^[a-z]{2,32}$";
+        String valuePattern = "^[a-zA-Z0-9]{2,32}$";
+        String passwordPattern = "^[a-zA-Z0-9\\[=-_\\]^]{6,1024}$";
 
         boolean ok = false;
 
@@ -152,6 +155,7 @@ public class Login implements loginIntf {
         if (k instanceof String && ((String) k).matches(keyPattern)) {
             key = (String) k;
         } else {
+            logger.warn("Key validation failed");
             return false;
         }
 
@@ -159,6 +163,7 @@ public class Login implements loginIntf {
         if (v instanceof String) {
             value = (String) v;
         } else {
+            logger.warn("Value validation failed");
             return false;
         }
 
@@ -171,6 +176,8 @@ public class Login implements loginIntf {
         } else {
             if (value.matches(pattern)) {
                 ok = true;
+            } else {
+                logger.warn("Value validation failed");
             }
         }
 

@@ -17,6 +17,7 @@ import org.springframework.boot.actuate.trace.http.HttpTrace;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.event.annotation.BeforeTestMethod;
 
 import java.security.KeyPair;
@@ -40,6 +41,7 @@ class TestWebApplication {
 
     @LocalServerPort
     private int port;
+
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
@@ -47,7 +49,6 @@ class TestWebApplication {
 
     private void loadConfig () throws JsonProcessingException, CertificateException {
         if (config==null) {
-            port = 8080;
             String url = "http://localhost:" + port + "/config";
             config = restTemplate.getForObject(url, String.class);
 
@@ -56,7 +57,7 @@ class TestWebApplication {
             Map<String,Object> configMap = (Map<String,Object>)map.get("config");
             Map<String,Object> remotekeystore = (Map<String,Object>)configMap.get("remotekeystore");
             ca = (String)remotekeystore.get("ca");
-            String serverCertificatePem = (String)remotekeystore.get("ca");
+            String serverCertificatePem = (String)remotekeystore.get("server");
             serverCertificate = PemUtils.getCertificateFromPem(serverCertificatePem);
         }
     }
@@ -66,6 +67,7 @@ class TestWebApplication {
     static void initTests () {
         try {
             testLib = TestLib.getInstance();
+            CryptFetchSpringApplication.addInitHooks();
         } catch (Exception e) {
             logger.error("BeforeAll failed");
             logger.error(e);
@@ -103,13 +105,21 @@ class TestWebApplication {
         map.put("username", username);
         map.put("password", password);
         map.put("csr", pemCsr);
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonResult = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);
-        byte[] encrypted = encryptAndDecrypt.encrypt(null, null, serverCertificate, jsonResult.getBytes());
-        String request = PemUtils.encodeObjectToPEM(new CMSEnvelopedData(encrypted));
-        logger.info("[testLogin] request: " + request);
-        String response = this.restTemplate.postForObject(url, request, String.class);
-        logger.info("[testLogin] response: " + response);
+        ObjectMapper reqMapper = new ObjectMapper();
+        String jsonResult = reqMapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);
+        String encrypted = encryptAndDecrypt.encryptPem(null, null, serverCertificate, jsonResult.getBytes());
+
+        String response = this.restTemplate.postForObject(url, encrypted, String.class);
+
+        ObjectMapper respMapper = new ObjectMapper();
+        Map<String, String> respMap = respMapper.readValue(response, new TypeReference<>(){});
+        boolean authenticated = Boolean.parseBoolean(respMap.get("authenticated"));
+        String certificate = respMap.get("certificate");
+        logger.info("authenticated: " + authenticated);
+        logger.info("certificate:\n" + certificate);
+
+        assert authenticated;
+        assert certificate != null;
     }
 
 }

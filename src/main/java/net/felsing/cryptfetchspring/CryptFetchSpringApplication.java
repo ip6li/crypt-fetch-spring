@@ -26,12 +26,12 @@ public class CryptFetchSpringApplication {
 
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(CryptFetchSpringApplication.class);
-        addInitHooks(application);
+        addInitHooks();
         application.run(args);
     }
 
 
-    private static void addInitHooks(SpringApplication application) {
+    public static void addInitHooks() {
         try {
             CA ca = CryptInit.getInstance("./");
             serverConfig = ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
@@ -43,7 +43,7 @@ public class CryptFetchSpringApplication {
 
     @RequestMapping(value = "/config", method = RequestMethod.GET)
     public Map<String, ?> getConfig() {
-        //ToDo: Deliver server/ca certificate and urls for further operations
+        // Deliver server/ca certificate and urls for further operations
         return serverConfig.getConfig();
     }
 

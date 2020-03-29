@@ -49,11 +49,9 @@ class TestBasicFunctions {
         X509Certificate certificate2 = PemUtils.getCertificateFromPem(clientCert2.get("certificate"));
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
 
-        byte[] encryptedText = encryptAndDecrypt.encrypt(null, null, certificate2, bPlainText);
-        String encryptedTextPem = PemUtils.encodeObjectToPEM(new CMSEnvelopedData(encryptedText));
-        byte[] encryptedText2 = PemUtils.parseDERfromPEM(encryptedTextPem.getBytes());
+        String encryptedText = encryptAndDecrypt.encryptPem(null, null, certificate2, bPlainText);
 
-        byte[] bDecryptedText = encryptAndDecrypt.decrypt(privateKey2, certificate2, encryptedText2);
+        byte[] bDecryptedText = encryptAndDecrypt.decrypt(privateKey2, certificate2, encryptedText);
 
         String decryptedText = new String(bDecryptedText);
 

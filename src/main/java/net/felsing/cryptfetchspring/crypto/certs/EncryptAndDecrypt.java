@@ -20,6 +20,7 @@ package net.felsing.cryptfetchspring.crypto.certs;
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
+import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -51,36 +52,42 @@ public final class EncryptAndDecrypt {
     private static final String mdgName = "MGF1";
 
 
+    public byte[] decrypt (PrivateKey privateKey, X509Certificate encryptionCert, String encryptedDataPEM)
+            throws IOException, CMSException {
+
+        return decrypt(privateKey, encryptionCert, PemUtils.parseDERfromPEM(encryptedDataPEM.getBytes()));
+    }
+
     /**
      * decrypts data
      *
      * @param privateKey            Recipients private key
      * @param encryptionCert        Recipients certificate
-     * @param encryptedDataPEM      Encrypted data in PEM format
+     * @param encryptedDataDER      Encrypted data in PEM format
      * @return                      Plain text
      * @throws IOException          in case of data failures
      * @throws CMSException         in case of decryption failures
      */
     public byte[] decrypt(
-            PrivateKey privateKey, X509Certificate encryptionCert, byte[] encryptedDataPEM)
+            PrivateKey privateKey, X509Certificate encryptionCert, byte[] encryptedDataDER)
             throws IOException, CMSException {
 
-        if (encryptedDataPEM==null) {
+        if (encryptedDataDER==null) {
             throw new IOException("encryptedData is null");
         }
 
         String alg = privateKey.getAlgorithm();
         if (alg.matches("EC.*")) {
-            return decryptEC(privateKey, encryptionCert, encryptedDataPEM);
+            return decryptEC(privateKey, encryptionCert, encryptedDataDER);
         } else {
-            return decryptRSA(privateKey, encryptedDataPEM);
+            return decryptRSA(privateKey, encryptedDataDER);
         }
     }
 
 
-    private byte[] decryptRSA(PrivateKey privateKey, byte[] encryptedDataPEM)
+    private byte[] decryptRSA(PrivateKey privateKey, byte[] encryptedDataDER)
             throws IOException, CMSException {
-        CMSEnvelopedDataParser parser = new CMSEnvelopedDataParser(encryptedDataPEM);
+        CMSEnvelopedDataParser parser = new CMSEnvelopedDataParser(encryptedDataDER);
         RecipientInformation recInfo = getSingleRecipient(parser);
         Recipient recipient = new JceKeyTransEnvelopedRecipient(privateKey);
         return recInfo.getContent(recipient);
@@ -88,10 +95,10 @@ public final class EncryptAndDecrypt {
 
 
     private byte[] decryptEC(
-            PrivateKey privateKey, X509Certificate encryptionCert, byte[] encryptedDataPEM
+            PrivateKey privateKey, X509Certificate encryptionCert, byte[] encryptedDataDER
     ) throws CMSException {
 
-        CMSEnvelopedData envelopedData = new CMSEnvelopedData(encryptedDataPEM);
+        CMSEnvelopedData envelopedData = new CMSEnvelopedData(encryptedDataDER);
         RecipientInformationStore recipients = envelopedData.getRecipientInfos();
         RecipientId rid = new JceKeyAgreeRecipientId(encryptionCert);
         RecipientInformation recipient = recipients.get(rid);
@@ -99,7 +106,15 @@ public final class EncryptAndDecrypt {
     }
 
 
-    public byte[] encrypt(PrivateKey privateKeySender, X509Certificate certSender,
+    public String encryptPem (PrivateKey privateKeySender, X509Certificate certSender,
+                                    X509Certificate certRcpt, byte[] plainText)
+            throws IOException, CMSException, CertificateException, InvalidAlgorithmParameterException {
+
+        return PemUtils.encodeObjectToPEM(encrypt(privateKeySender, certSender, certRcpt, plainText));
+    }
+
+
+    public CMSEnvelopedData encrypt(PrivateKey privateKeySender, X509Certificate certSender,
                           X509Certificate certRcpt, byte[] plainText)
             throws IOException, CMSException, CertificateException, InvalidAlgorithmParameterException {
 
@@ -117,7 +132,7 @@ public final class EncryptAndDecrypt {
     }
 
 
-    private byte[] encryptRSA(X509Certificate cert, byte[] plainText)
+    private CMSEnvelopedData encryptRSA(X509Certificate cert, byte[] plainText)
             throws CertificateEncodingException, CMSException, IOException,
             InvalidAlgorithmParameterException {
 
@@ -152,9 +167,7 @@ public final class EncryptAndDecrypt {
                         ProviderLoader.getProviderName()
                 ).build();
 
-        CMSEnvelopedData cmsEnvelopedData = gen.generate(new CMSProcessableByteArray(plainText), encryptor);
-
-        return cmsEnvelopedData.getEncoded();
+        return gen.generate(new CMSProcessableByteArray(plainText), encryptor);
     }
 
 
@@ -176,7 +189,7 @@ public final class EncryptAndDecrypt {
     }
 
 
-    private byte[] encryptEC(PrivateKey privateKeySender, X509Certificate certSender, X509Certificate certRcpt, byte[] plainText)
+    private CMSEnvelopedData encryptEC(PrivateKey privateKeySender, X509Certificate certSender, X509Certificate certRcpt, byte[] plainText)
             throws CMSException, IOException, CertificateException {
 
         CMSEnvelopedDataGenerator gen = new CMSEnvelopedDataGenerator();
@@ -198,9 +211,7 @@ public final class EncryptAndDecrypt {
         OutputEncryptor encryptor =
                 new BcCMSContentEncryptorBuilder(CMSAlgorithm.AES256_CBC).build();
 
-        CMSEnvelopedData cmsEnvelopedData = gen.generate(new CMSProcessableByteArray(plainText), encryptor);
-
-        return cmsEnvelopedData.getEncoded();
+        return gen.generate(new CMSProcessableByteArray(plainText), encryptor);
     }
 
 
