@@ -71,9 +71,20 @@ public class CryptFetchSpringApplication {
 
 
     @RequestMapping(value = "/message", method = RequestMethod.POST)
-    public String message() {
-        //ToDo: get encrypted request und put encrypted response
-        return "message()";
+    public String message(@RequestBody String request) {
+        // Get encrypted request und put encrypted response
+        MessageHandler messageHandler = MessageHandler.getInstance(
+                CryptInit.getServerCertificate().getServerKeyPair(),
+                CryptInit.getServerCertificate().getServerCertificate(),
+                CryptInit.getCa().getCaX509Certificate());
+
+        try {
+            String encryptedResponse = messageHandler.doRequest(request);
+            return encryptedResponse;
+        } catch (Exception e) {
+            logger.warn(e);
+        }
+        return "{\"error\": \"message failed\"}";
     }
 
 

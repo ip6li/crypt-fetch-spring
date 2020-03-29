@@ -8,7 +8,9 @@ import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.cms.CMSEnvelopedData;
+import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -20,7 +22,10 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.event.annotation.BeforeTestMethod;
 
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
@@ -36,7 +41,6 @@ class TestWebApplication {
     private static String config=null;
     private static String ca=null;
     private static X509Certificate serverCertificate=null;
-    private static Csr csr=null;
 
 
     @LocalServerPort
@@ -90,15 +94,10 @@ class TestWebApplication {
     }
 
 
-    @Test
-    public void testLogin () throws Exception {
-        loadConfig();
-
+    private Map<String, String> login (String username, String password, String pemCsr)
+        throws Exception {
         String url = "http://localhost:" + port + "/login";
-        String username = "myUserName";
-        String password = "myPassword";
-        csr = testLib.genCsr("CN=cert1");
-        String pemCsr = PemUtils.encodeObjectToPEM(csr);
+
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
 
         HashMap<String,String> map = new HashMap<>();
@@ -112,7 +111,21 @@ class TestWebApplication {
         String response = this.restTemplate.postForObject(url, encrypted, String.class);
 
         ObjectMapper respMapper = new ObjectMapper();
-        Map<String, String> respMap = respMapper.readValue(response, new TypeReference<>(){});
+        return respMapper.readValue(response, new TypeReference<>(){});
+    }
+
+
+    @Test
+    public void testLogin () throws Exception {
+        loadConfig();
+
+        String username = "myUserName";
+        String password = "myPassword";
+        Csr csr = testLib.genCsr("CN=cert1");
+        String pemCsr = PemUtils.encodeObjectToPEM(csr);
+
+        Map<String, String> respMap = login(username, password, pemCsr);
+
         boolean authenticated = Boolean.parseBoolean(respMap.get("authenticated"));
         String certificate = respMap.get("certificate");
         logger.info("authenticated: " + authenticated);
@@ -122,4 +135,54 @@ class TestWebApplication {
         assert certificate != null;
     }
 
+
+    private String doMessage (KeyPair senderKeyPair, X509Certificate senderCert, byte[] message)
+            throws Exception {
+        String url = "http://localhost:" + port + "/message";
+
+        EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
+        Cms cms = new Cms();
+
+        CMSSignedData cmsSignedData = cms.signCmsEnveloped(senderKeyPair, senderCert, message);
+
+        String encrypted = encryptAndDecrypt.encryptPem(senderKeyPair.getPrivate(),
+                senderCert, serverCertificate, cmsSignedData.getEncoded());
+
+        return this.restTemplate.postForObject(url, encrypted, String.class);
+    }
+
+    @Test
+    public void testMessage () throws Exception {
+        String username = "myUsername2";
+        String password = "myPassword2";
+        Csr csr = testLib.genCsr("CN=cert2");
+        String pemCsr = PemUtils.encodeObjectToPEM(csr);
+
+        String plainTextSend = "Hello world! Umlaute: äöüÄÖÜß€";
+
+        Map<String,String> loginResp = login(username, password, pemCsr);
+
+        String clientCertPem = loginResp.get("certificate");
+        X509Certificate clientCert = PemUtils.getCertificateFromPem(clientCertPem);
+
+        String response = doMessage(csr.getKeyPair(), clientCert, plainTextSend.getBytes());
+        EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
+        byte[] decryptedResponse = encryptAndDecrypt.decrypt(
+                csr.getKeyPair().getPrivate(),
+                clientCert,
+                response
+        );
+        Cms cms = new Cms();
+        Cms.Result result = cms.verifyCmsSignature(
+                new CMSSignedData(decryptedResponse),
+                PemUtils.getCertificateFromPem(ca)
+        );
+
+        String content = new String(result.getContent());
+        logger.info("[testMessage] response content: " + content);
+        logger.info("[testMessage] response validated: " + result.isVerifyOk());
+
+        //assert content.matches(".*foo.*");
+        assert result.isVerifyOk();
+    }
 }
