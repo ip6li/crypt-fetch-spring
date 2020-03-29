@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
@@ -28,6 +29,12 @@ public class Login implements loginIntf {
     final private static String sTrue = Boolean.toString(true);
 
 
+    public Login () {
+
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+    }
+
+
     @Override
     public HashMap<String, String> login(String cms) {
         HashMap<String, String> result = new HashMap<>();
@@ -38,7 +45,8 @@ public class Login implements loginIntf {
 
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
         try {
-            byte[] decrypted = encryptAndDecrypt.decrypt(keyPair.getPrivate(), certificate, cms.getBytes());
+            logger.info("[login] cms: " + cms);
+            byte[] decrypted = encryptAndDecrypt.decrypt(keyPair.getPrivate(), certificate, PemUtils.parseDERfromPEM(cms.getBytes()));
             ObjectMapper objectMapper = new ObjectMapper();
 
             // credentials contains unvalidated, client provided data which may

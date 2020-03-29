@@ -4,6 +4,7 @@ import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSSignedData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,20 +40,21 @@ class TestBasicFunctions {
 
     @Test
     void encrypt() throws Exception {
-        HashMap<String, String> clientCert1 = testLib.genClientCertificate("cert1");
         HashMap<String, String> clientCert2 = testLib.genClientCertificate("cert2");
 
         String plainText = "Hello world! Umlaute: äöüÄÖÜß€";
         byte[] bPlainText = plainText.getBytes();
 
-        RSAPrivateKey privateKey1 = PemUtils.getPrivateKeyFromPem(clientCert1.get("privateKey"));
-        X509Certificate certificate1 = PemUtils.getCertificateFromPem(clientCert1.get("certificate"));
         RSAPrivateKey privateKey2 = PemUtils.getPrivateKeyFromPem(clientCert2.get("privateKey"));
         X509Certificate certificate2 = PemUtils.getCertificateFromPem(clientCert2.get("certificate"));
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
-        byte[] encryptedText = encryptAndDecrypt.encrypt(privateKey1, certificate1, certificate2, bPlainText);
 
-        byte[] bDecryptedText = encryptAndDecrypt.decrypt(privateKey2, certificate2, encryptedText);
+        byte[] encryptedText = encryptAndDecrypt.encrypt(null, null, certificate2, bPlainText);
+        String encryptedTextPem = PemUtils.encodeObjectToPEM(new CMSEnvelopedData(encryptedText));
+        byte[] encryptedText2 = PemUtils.parseDERfromPEM(encryptedTextPem.getBytes());
+
+        byte[] bDecryptedText = encryptAndDecrypt.decrypt(privateKey2, certificate2, encryptedText2);
+
         String decryptedText = new String(bDecryptedText);
 
         logger.info("[encrypt] plainText: " + plainText);
