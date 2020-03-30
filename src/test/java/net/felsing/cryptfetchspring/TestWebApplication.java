@@ -1,35 +1,22 @@
 package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.felsing.cryptfetchspring.crypto.certs.*;
+import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.cms.CMSEnvelopedData;
-import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
-import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.trace.http.HttpTrace;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.event.annotation.BeforeTestMethod;
-
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
-import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,11 +43,21 @@ class TestWebApplication {
         if (config==null) {
             String url = "http://localhost:" + port + "/config";
             config = restTemplate.getForObject(url, String.class);
+            Map<?,?> map = JsonUtils.json2map(config);
 
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> map = mapper.readValue(config, new TypeReference<>(){});
-            Map<String,Object> configMap = (Map<String,Object>)map.get("config");
-            Map<String,Object> remotekeystore = (Map<String,Object>)configMap.get("remotekeystore");
+            @SuppressWarnings("rawtypes")
+            Map<String,Object> configMap = CheckedCast.castToMapOf(
+                    String.class,
+                    Object.class,
+                    (Map)map.get("config")
+            );
+            @SuppressWarnings("rawtypes")
+            Map<String,Object> remotekeystore = CheckedCast.castToMapOf(
+                    String.class,
+                    Object.class,
+                    (Map)configMap.get("remotekeystore")
+            );
+
             ca = (String)remotekeystore.get("ca");
             String serverCertificatePem = (String)remotekeystore.get("server");
             serverCertificate = PemUtils.getCertificateFromPem(serverCertificatePem);
@@ -110,7 +107,7 @@ class TestWebApplication {
 
         String response = this.restTemplate.postForObject(url, encrypted, String.class);
 
-        return (Map<String, String>) JsonUtils.json2map(response);
+        return CheckedCast.castToMapOf(String.class, String.class, JsonUtils.json2map(response));
     }
 
 

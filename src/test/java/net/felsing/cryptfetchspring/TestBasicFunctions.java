@@ -4,6 +4,8 @@ import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSSignedData;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,6 +15,8 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -89,4 +93,20 @@ class TestBasicFunctions {
         assert result.isVerifyOk();
     }
 
+
+    @Test
+    void certificate () throws Exception {
+        Certificates certificates = new Certificates();
+        certificates.createSelfSignedCertificateRSA("CN=mySelfSigned Certificate", 1);
+        assert certificates.getX509Certificate() != null;
+    }
+
+    @Test
+    void generateCsr () throws Exception {
+        List<GeneralName> sanList = new LinkedList<>();
+        sanList.add(new GeneralName(GeneralName.dNSName, "name.example.com"));
+        Csr csr = new Csr();
+        csr.createCsr(Certificates.KeyType.RSA, 2048, "CN=my CSR with SAN", sanList);
+        logger.info("[generateCsr] " + PemUtils.encodeObjectToPEM(csr.getCsr()));
+    }
 }

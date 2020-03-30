@@ -4,15 +4,12 @@ import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.login.Login;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.cms.CMSException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,7 +46,7 @@ public class CryptFetchSpringApplication {
 
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public Map login(@RequestBody String request) {
+    public Map<String, String> login(@RequestBody String request) {
         // getCSR, verify credentials, if ok: sign CSR and return client certificate
         Login login = new Login();
         try {
@@ -79,8 +76,7 @@ public class CryptFetchSpringApplication {
                 CryptInit.getCa().getCaX509Certificate());
 
         try {
-            String encryptedResponse = messageHandler.doRequest(request);
-            return encryptedResponse;
+            return messageHandler.doRequest(request);
         } catch (Exception e) {
             logger.warn(e);
         }

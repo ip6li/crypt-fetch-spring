@@ -230,7 +230,7 @@ public final class Certificates {
         List<String> identities = new ArrayList<>();
         try {
             Collection<List<?>> altNames = x509Certificate.getSubjectAlternativeNames();
-            for (List item : altNames) {
+            for (List<?> item : altNames) {
                 Integer type = (Integer) item.get(0);
                 if (type == 0 || type == 2 || type == 6) {
                     try {

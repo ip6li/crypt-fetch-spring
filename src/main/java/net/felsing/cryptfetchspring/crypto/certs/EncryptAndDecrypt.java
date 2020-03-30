@@ -133,7 +133,7 @@ public final class EncryptAndDecrypt {
 
 
     private CMSEnvelopedData encryptRSA(X509Certificate cert, byte[] plainText)
-            throws CertificateEncodingException, CMSException, IOException,
+            throws CertificateEncodingException, CMSException,
             InvalidAlgorithmParameterException {
 
         JcaAlgorithmParametersConverter paramsConverter = new JcaAlgorithmParametersConverter();
@@ -216,13 +216,12 @@ public final class EncryptAndDecrypt {
 
 
     private static RecipientInformation getSingleRecipient(CMSEnvelopedDataParser parser) {
-        Collection recInfos = parser.getRecipientInfos().getRecipients();
-        Iterator recipientIterator = recInfos.iterator();
+        Collection<RecipientInformation> recInfos = parser.getRecipientInfos().getRecipients();
+        Iterator<RecipientInformation> recipientIterator = recInfos.iterator();
         if (!recipientIterator.hasNext()) {
             throw new RuntimeException("Could not find recipient");
         }
-        return (RecipientInformation) recipientIterator.next();
+        return recipientIterator.next();
     }
-
 
 } // class

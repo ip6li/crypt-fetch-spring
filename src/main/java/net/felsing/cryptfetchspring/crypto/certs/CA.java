@@ -34,12 +34,6 @@ public final class CA {
     private X509Certificate caX509Certificate;
 
     
-    public KeyPair getCaKeyPair() {
-
-        return caKeyPair;
-    }
-
-    
     public X509Certificate getCaX509Certificate() {
 
         return caX509Certificate;

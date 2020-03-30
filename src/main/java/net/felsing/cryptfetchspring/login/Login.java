@@ -5,6 +5,7 @@ import net.felsing.cryptfetchspring.CryptInit;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
+import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,13 +50,14 @@ public class Login implements loginIntf {
             ObjectMapper objectMapper = new ObjectMapper();
 
             // credentials contains unvalidated, client provided data which may
-            // contain malicious content.
-            HashMap<String, String> credentials = new HashMap<>();
-            objectMapper.readValue(decrypted, HashMap.class).forEach((k, v) -> {
-                if (k instanceof String && v instanceof String) {
-                    credentials.put((String) k, (String) v);
-                }
-            });
+            // contain malicious content. First we do a type safe cast
+            HashMap<String, String> credentials = new HashMap<>(
+                    CheckedCast.castToMapOf(
+                        String.class,
+                        String.class,
+                        objectMapper.readValue(decrypted, HashMap.class)
+                    )
+            );
 
             return execLogin(credentials);
 
