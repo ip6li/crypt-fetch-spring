@@ -2,7 +2,7 @@ package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.felsing.cryptfetchspring.crypto.certs.Cms;
+import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,7 +10,6 @@ import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.operator.OperatorCreationException;
 import java.io.IOException;
-import java.io.InvalidObjectException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.cert.CertificateException;
@@ -42,7 +41,7 @@ public class MessageHandler {
     }
 
 
-    private String doPlainTextRequest (Cms.Result plainTextRequest)
+    private String doPlainTextRequest (CmsSign.Result plainTextRequest)
             throws JsonProcessingException {
         logger.info("[doPlainTextRequest] request: " + new String (plainTextRequest.getContent()));
         HashMap<String,String> plainTextResponse = new HashMap<>();
@@ -56,16 +55,16 @@ public class MessageHandler {
             throws CMSException, OperatorCreationException, CertificateException,
             IOException, InvalidAlgorithmParameterException {
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
-        Cms cms = new Cms();
+        CmsSign cmsSign = new CmsSign();
 
         byte[] decrypted = encryptAndDecrypt.decrypt(serverKeyPair.getPrivate(), serverCert, encryptedRequest);
-        Cms.Result plainTextAndValidatedReq = cms.verifyCmsSignature(new CMSSignedData(decrypted), ca);
+        CmsSign.Result plainTextAndValidatedReq = cmsSign.verifyCmsSignature(new CMSSignedData(decrypted), ca);
         List<X509Certificate> clientCertificates = plainTextAndValidatedReq.getCertificates();
         X509Certificate clientCert = clientCertificates.get(0);
 
         String jsonResponse = doPlainTextRequest(plainTextAndValidatedReq);
 
-        CMSSignedData cmsSignedResp = cms.signCmsEnveloped(serverKeyPair, serverCert, jsonResponse.getBytes());
+        CMSSignedData cmsSignedResp = cmsSign.signCmsEnveloped(serverKeyPair, serverCert, jsonResponse.getBytes());
 
         String encryptedResp = encryptAndDecrypt.encryptPem(
                 serverKeyPair.getPrivate(),

@@ -137,9 +137,9 @@ class TestWebApplication {
         String url = "http://localhost:" + port + "/message";
 
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
-        Cms cms = new Cms();
+        CmsSign cmsSign = new CmsSign();
 
-        CMSSignedData cmsSignedData = cms.signCmsEnveloped(senderKeyPair, senderCert, message);
+        CMSSignedData cmsSignedData = cmsSign.signCmsEnveloped(senderKeyPair, senderCert, message);
 
         String encrypted = encryptAndDecrypt.encryptPem(senderKeyPair.getPrivate(),
                 senderCert, serverCertificate, cmsSignedData.getEncoded());
@@ -168,8 +168,8 @@ class TestWebApplication {
                 clientCert,
                 response
         );
-        Cms cms = new Cms();
-        Cms.Result result = cms.verifyCmsSignature(
+        CmsSign cmsSign = new CmsSign();
+        CmsSign.Result result = cmsSign.verifyCmsSignature(
                 new CMSSignedData(decryptedResponse),
                 PemUtils.getCertificateFromPem(ca)
         );

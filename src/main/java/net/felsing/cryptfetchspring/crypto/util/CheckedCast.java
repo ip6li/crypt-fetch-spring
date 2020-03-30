@@ -1,8 +1,13 @@
+
 package net.felsing.cryptfetchspring.crypto.util;
 
 import java.util.Map;
 
 // See: https://stackoverflow.com/questions/25618452/cast-a-raw-map-to-a-generic-map-using-a-method-cleanly-and-safely-in-a-fail-ear
+
+/***********************************************************************************
+ * Provides type safe Map casting
+ **********************************************************************************/
 
 public class CheckedCast {
 

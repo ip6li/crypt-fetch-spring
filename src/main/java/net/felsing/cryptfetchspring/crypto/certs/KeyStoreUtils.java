@@ -40,7 +40,7 @@ public final class KeyStoreUtils {
                                        String keyStoreFile, String password)
             throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        X509Certificate x509CertificateList[] = new X509Certificate[1];
+        X509Certificate[] x509CertificateList = new X509Certificate[1];
         x509CertificateList[0]=x509Certificate;
         keyStore.load(null, null);
 
@@ -59,9 +59,9 @@ public final class KeyStoreUtils {
         PublicKey publicKey = null;
         X509Certificate x509Certificate = null;
 
-        Enumeration e = keyStore.aliases();
+        Enumeration<String> e = keyStore.aliases();
         if (e.hasMoreElements()) {
-            String alias = (String) e.nextElement();
+            String alias = e.nextElement();
             Key key = keyStore.getKey(alias, keystorePassword.toCharArray());
             x509Certificate = (X509Certificate) keyStore.getCertificate(alias);
             publicKey = x509Certificate.getPublicKey();

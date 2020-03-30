@@ -52,7 +52,7 @@ public final class EncryptAndDecrypt {
     private static final String mdgName = "MGF1";
 
 
-    public byte[] decrypt (PrivateKey privateKey, X509Certificate encryptionCert, String encryptedDataPEM)
+    public byte[] decrypt(PrivateKey privateKey, X509Certificate encryptionCert, String encryptedDataPEM)
             throws IOException, CMSException {
 
         return decrypt(privateKey, encryptionCert, PemUtils.parseDERfromPEM(encryptedDataPEM.getBytes()));
@@ -61,18 +61,18 @@ public final class EncryptAndDecrypt {
     /**
      * decrypts data
      *
-     * @param privateKey            Recipients private key
-     * @param encryptionCert        Recipients certificate
-     * @param encryptedDataDER      Encrypted data in PEM format
-     * @return                      Plain text
-     * @throws IOException          in case of data failures
-     * @throws CMSException         in case of decryption failures
+     * @param privateKey       Recipients private key
+     * @param encryptionCert   Recipients certificate
+     * @param encryptedDataDER Encrypted data in PEM format
+     * @return Plain text
+     * @throws IOException  in case of data failures
+     * @throws CMSException in case of decryption failures
      */
     public byte[] decrypt(
             PrivateKey privateKey, X509Certificate encryptionCert, byte[] encryptedDataDER)
             throws IOException, CMSException {
 
-        if (encryptedDataDER==null) {
+        if (encryptedDataDER == null) {
             throw new IOException("encryptedData is null");
         }
 
@@ -106,19 +106,26 @@ public final class EncryptAndDecrypt {
     }
 
 
-    public String encryptPem (PrivateKey privateKeySender, X509Certificate certSender,
-                                    X509Certificate certRcpt, byte[] plainText)
+    public String encryptPem(PrivateKey privateKeySender, X509Certificate certSender,
+                             X509Certificate certRcpt, byte[] plainText)
             throws IOException, CMSException, CertificateException, InvalidAlgorithmParameterException {
 
         return PemUtils.encodeObjectToPEM(encrypt(privateKeySender, certSender, certRcpt, plainText));
     }
 
 
-    public CMSEnvelopedData encrypt(PrivateKey privateKeySender, X509Certificate certSender,
-                          X509Certificate certRcpt, byte[] plainText)
+    public String encryptPem(X509Certificate certRcpt, byte[] plainText)
             throws IOException, CMSException, CertificateException, InvalidAlgorithmParameterException {
 
-        if (plainText==null) {
+        return encryptPem(null, null, certRcpt, plainText);
+    }
+
+
+    public CMSEnvelopedData encrypt(PrivateKey privateKeySender, X509Certificate certSender,
+                                    X509Certificate certRcpt, byte[] plainText)
+            throws IOException, CMSException, CertificateException, InvalidAlgorithmParameterException {
+
+        if (plainText == null) {
             throw new IOException("plaintext is null");
         }
 

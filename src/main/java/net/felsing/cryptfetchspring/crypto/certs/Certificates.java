@@ -232,7 +232,7 @@ public final class Certificates {
             Collection<List<?>> altNames = x509Certificate.getSubjectAlternativeNames();
             for (List<?> item : altNames) {
                 Integer type = (Integer) item.get(0);
-                if (type == 0 || type == 2 || type == 6) {
+                if (Arrays.stream(Constants.allowedSanTypes).anyMatch(type::equals)) {
                     try {
                         ASN1InputStream decoder = null;
                         if (item.toArray()[1] instanceof byte[])
@@ -246,6 +246,8 @@ public final class Certificates {
                     } catch (Exception e) {
                         logger.error("Error decoding subjectAltName" + e.getLocalizedMessage(), e);
                     }
+                } else {
+                    logger.warn("Unknown SAN type: " + type);
                 }
             }
         } catch (NullPointerException ne) {

@@ -81,7 +81,7 @@ public final class Signer {
     }
 
 
-    String signServer(String inputCSR, String privateKey, String caCertificate)
+    public String signServer(String inputCSR, String privateKey, String caCertificate)
             throws OperatorCreationException,
             NoSuchAlgorithmException, IOException,
             NoSuchProviderException, CertificateException, InvalidKeySpecException {

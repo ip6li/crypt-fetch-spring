@@ -7,15 +7,15 @@ import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+
 
 public class TestLib {
     private static Logger logger = LogManager.getLogger(TestLib.class);
 
     private static CA ca;
+    private static TestLib testLib;
 
 
     private TestLib () {
@@ -30,13 +30,17 @@ public class TestLib {
 
     public static TestLib getInstance () {
 
-        return new TestLib();
+        if (testLib==null) {
+            testLib = new TestLib();
+        }
+
+        return testLib;
     }
 
 
     public Csr genCsr (String dn) throws Exception {
         Csr request = new Csr();
-        request.createCsr(Certificates.KeyType.RSA, 2048, "CN=".concat(dn));
+        request.createCsr(Certificates.KeyType.RSA, "CN=".concat(dn));
         return request;
     }
 
@@ -49,7 +53,7 @@ public class TestLib {
         String csr;
         String certificate;
 
-        request.createCsr(Certificates.KeyType.RSA, 2048, "CN=".concat(cn));
+        request.createCsr(Certificates.KeyType.RSA, "CN=".concat(cn));
         privateKey = PemUtils.encodeObjectToPEM(request.getKeyPair().getPrivate());
         csr = PemUtils.encodeObjectToPEM(request.getCsr());
         certStore.put("privateKey", privateKey);
@@ -65,7 +69,12 @@ public class TestLib {
     }
 
 
-    public X509Certificate getCaCertificate () {
+    public static CA getCa () {
+
+        return ca;
+    }
+
+    public static X509Certificate getCaCertificate () {
 
         return ca.getCaX509Certificate();
     }

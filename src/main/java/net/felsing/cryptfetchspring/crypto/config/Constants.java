@@ -21,8 +21,6 @@ package net.felsing.cryptfetchspring.crypto.config;
 public final class Constants {
 
     // attribute ids
-    public static final String att_validated = "x509validated";
-    public static final String att_error = "x509error";
     public static final String SHA256withECDSA = "SHA256withECDSA";
     public static final String SHA256withRSA = "SHA256withRSA";
 
@@ -43,46 +41,26 @@ public final class Constants {
     public static final String keyAlgoOidEC = "1.2.840.10045.2.1";
     public static final String oidSan = "2.5.29.19";
 
-    // ids for Json fields
-    public static final String id_data = "data";
-    public static final String id_error = "error";
-    public static final String id_certificates = "certificates";
-    public static final String id_certificateChain = "certificateChain";
-    public static final String id_pkcs10 = "pkcs10";
-    public static final String id_serverCert = "serverCert";
-    public static final String id_validationOk = "validationOk";
-    public static final String id_exception ="exception";
-
-    // cmd ids
-    public static final String cmd ="cmd";
-    public static final String do_cms ="doCms";
-    public static final String do_sign = "doSign";
-    public static final String do_get_config = "getConfig";
-
     // properties
     public static final String p_serverKeystoreFile = "servercert.keystore.file";
     public static final String p_serverKeystorePassword = "changeit";
     public static final String p_signerKeystoreFile = "signercert.keystore.file";
     public static final String p_signerKeystorePassword = "changeit";
 
-    // errors
-    public static final String err_msg = "msg";
-    public static final String err_unknown = "unknown request";
-    public static final String err_notReady = "not ready";
-    public static final String err_ok = "ok";
-    public static final String err_failed = "failed";
-
     // -D parameters
-    static final String d_serverKeystorePassword = "serverKeystorePassword";
-    static final String d_signerKeystorePassword = "d_signerKeystorePassword";
+    public static final String d_serverKeystorePassword = "serverKeystorePassword";
+    public static final String d_signerKeystorePassword = "d_signerKeystorePassword";
 
     // how long CA should live
     public static final int caDays = 30 * 365;
 
     // for debugging
-    public static boolean enableOriginatorInfo = true;
+    public final static boolean enableOriginatorInfo = true;
 
     // Config hash key names
-    public static String ca = "ca";
-    public static String serverCert = "server";
+    public final static String ca = "ca";
+    public final static String serverCert = "server";
+
+    public final static int[] allowedSanTypes = {0, 1, 2, 6, 7};
+
 }

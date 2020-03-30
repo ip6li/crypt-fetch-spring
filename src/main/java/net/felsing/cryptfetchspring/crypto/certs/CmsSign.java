@@ -39,8 +39,8 @@ import java.util.Collection;
 import java.util.List;
 
 
-public final class Cms {
-    private static Logger logger = LogManager.getLogger(Cms.class);
+public final class CmsSign {
+    private static Logger logger = LogManager.getLogger(CmsSign.class);
 
     static {
         Security.addProvider(ProviderLoader.getProvider());

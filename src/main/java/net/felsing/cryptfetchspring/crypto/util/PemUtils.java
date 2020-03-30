@@ -8,7 +8,6 @@ import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-
 import java.io.*;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -18,6 +17,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.*;
+
 
 /****************************************************************************************************************
  * Utility class which provides useful tools to convert certificates and keys in PEM format
@@ -160,6 +160,7 @@ public final class PemUtils {
             );
             sw.write("\n" + Constants.PUBLIC_KEY_END);
         } else {
+            logger.error("Cannot convert class '" + o.getClass().getName() + "' to PEM");
             throw new CertificateEncodingException(
                     "unknown Object type " +
                             o.getClass().getName() +

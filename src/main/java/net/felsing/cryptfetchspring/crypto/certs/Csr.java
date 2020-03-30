@@ -81,7 +81,7 @@ public final class Csr {
             default: throw new IOException("Unknown key type: " + keyType.toString());
         }
 
-        createCsr(keyType, size, dn, null);
+        createCsr(keyType, size, dn);
     }
 
 
