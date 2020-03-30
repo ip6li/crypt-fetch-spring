@@ -25,9 +25,6 @@ public class MessageHandler {
     private X509Certificate ca;
 
 
-    private MessageHandler () { }
-
-
     private MessageHandler (KeyPair serverKeyPair, X509Certificate serverCert, X509Certificate ca) {
         this.serverKeyPair = serverKeyPair;
         this.serverCert = serverCert;
@@ -66,13 +63,11 @@ public class MessageHandler {
 
         CMSSignedData cmsSignedResp = cmsSign.signCmsEnveloped(serverKeyPair, serverCert, jsonResponse.getBytes());
 
-        String encryptedResp = encryptAndDecrypt.encryptPem(
+        return encryptAndDecrypt.encryptPem(
                 serverKeyPair.getPrivate(),
                 serverCert,
                 clientCert,
                 cmsSignedResp.getEncoded()
         );
-
-        return encryptedResp;
     }
 }

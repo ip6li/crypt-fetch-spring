@@ -17,6 +17,7 @@
 
 package net.felsing.cryptfetchspring.crypto.certs;
 
+
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
 import org.bouncycastle.asn1.ASN1InputStream;
@@ -35,13 +36,11 @@ import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.*;
 import java.security.cert.Certificate;
-import java.security.spec.ECGenParameterSpec;
 import java.util.*;
 
 
@@ -73,31 +72,6 @@ public final class Certificates {
     public X509Certificate getX509Certificate() {
 
         return x509Certificate;
-    }
-
-
-    /**
-     *
-     * @param keyType "RSA" or "EC"
-     * @throws NoSuchProviderException from KeyPairGenerator
-     * @throws NoSuchAlgorithmException from KeyPairGenerator
-     */
-    static KeyPair generateKeypair(KeyType keyType, int size)
-            throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-        // generate a key pair
-
-        switch (keyType) {
-            case RSA:
-                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", ProviderLoader.getProviderName());
-                keyPairGenerator.initialize(size, new SecureRandom());
-                return keyPairGenerator.generateKeyPair();
-            case EC:
-                KeyPairGenerator kpgen = KeyPairGenerator.getInstance("ECDSA", ProviderLoader.getProviderName());
-                ECGenParameterSpec ec = new ECGenParameterSpec("prime256v1");
-                kpgen.initialize(ec, new SecureRandom());
-                return kpgen.generateKeyPair();
-        }
-        throw new NoSuchProviderException("Algorithm not implemented: " + keyType.toString());
     }
 
 
@@ -135,7 +109,7 @@ public final class Certificates {
         Provider bcProvider = ProviderLoader.getProvider();
         Security.addProvider(bcProvider);
 
-        KeyPair keyPair = generateKeypair(KeyType.RSA, 2048);
+        KeyPair keyPair = KeyUtils.generateKeypair(KeyType.RSA, 2048);
 
         Date startDate = new Date();
         Date endDate;
@@ -179,7 +153,7 @@ public final class Certificates {
         Provider bcProvider = ProviderLoader.getProvider();
         Security.addProvider(bcProvider);
 
-        KeyPair keypair = generateKeypair(KeyType.EC, 256);
+        KeyPair keypair = KeyUtils.generateKeypair(KeyType.EC, 256);
 
         X500Name subject = new X500Name(subjectDN);
 

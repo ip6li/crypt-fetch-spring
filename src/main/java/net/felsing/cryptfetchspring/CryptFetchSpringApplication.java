@@ -1,6 +1,8 @@
 package net.felsing.cryptfetchspring;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.CA;
+import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.login.Login;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,7 +83,14 @@ public class CryptFetchSpringApplication {
         } catch (Exception e) {
             logger.warn(e);
         }
-        return "{\"error\": \"message failed\"}";
+
+        String returnValue;
+        try {
+            returnValue = JsonUtils.map2json((Map<?, ?>) new HashMap<>().put("error", "message failed"));
+        } catch (JsonProcessingException e) {
+            returnValue = "error";
+        }
+        return returnValue;
     }
 
 

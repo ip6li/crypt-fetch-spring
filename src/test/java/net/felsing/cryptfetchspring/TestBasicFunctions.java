@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -154,4 +155,15 @@ class TestBasicFunctions {
         );
     }
 
+    @Test
+    public void testEC () throws Exception {
+        KeyPair keyPair = KeyUtils.generateKeypairEC("ECDSA", "prime256v1");
+        assert keyPair != null;
+
+        Csr csr = new Csr();
+        csr.createCsr(Certificates.KeyType.EC, "CN=ec test");
+        PKCS10CertificationRequest pkcs10 = csr.getCsr();
+        assert pkcs10 != null;
+        logger.info("[testEC] pkcs10:\n" + PemUtils.encodeObjectToPEM(pkcs10));
+    }
 }

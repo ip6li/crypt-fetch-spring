@@ -47,7 +47,7 @@ public final class Csr {
      */
     public void createCsr(Certificates.KeyType keyType, int size, String dn, List<GeneralName> sanList) throws Exception {
 
-        keyPair = Certificates.generateKeypair(keyType, size);
+        keyPair = KeyUtils.generateKeypair(keyType, size);
 
         PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(
                 new X500Principal(dn), keyPair.getPublic());
