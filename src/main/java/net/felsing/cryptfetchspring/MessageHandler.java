@@ -4,14 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.felsing.cryptfetchspring.crypto.certs.Cms;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
-import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.operator.OperatorCreationException;
-
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.cert.CertificateException;
@@ -27,7 +26,8 @@ public class MessageHandler {
     private X509Certificate ca;
 
 
-    private MessageHandler () {}
+    private MessageHandler () { }
+
 
     private MessageHandler (KeyPair serverKeyPair, X509Certificate serverCert, X509Certificate ca) {
         this.serverKeyPair = serverKeyPair;

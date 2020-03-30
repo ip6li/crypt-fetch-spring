@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.felsing.cryptfetchspring.crypto.certs.*;
+import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -104,14 +105,12 @@ class TestWebApplication {
         map.put("username", username);
         map.put("password", password);
         map.put("csr", pemCsr);
-        ObjectMapper reqMapper = new ObjectMapper();
-        String jsonResult = reqMapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);
+        String jsonResult = JsonUtils.map2json(map);
         String encrypted = encryptAndDecrypt.encryptPem(null, null, serverCertificate, jsonResult.getBytes());
 
         String response = this.restTemplate.postForObject(url, encrypted, String.class);
 
-        ObjectMapper respMapper = new ObjectMapper();
-        return respMapper.readValue(response, new TypeReference<>(){});
+        return (Map<String, String>) JsonUtils.json2map(response);
     }
 
 
@@ -185,4 +184,5 @@ class TestWebApplication {
         //assert content.matches(".*foo.*");
         assert result.isVerifyOk();
     }
+
 }
