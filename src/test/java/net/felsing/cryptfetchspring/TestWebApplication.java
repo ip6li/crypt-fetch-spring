@@ -69,7 +69,6 @@ class TestWebApplication {
     static void initTests () {
         try {
             testLib = TestLib.getInstance();
-            CryptFetchSpringApplication.addInitHooks();
         } catch (Exception e) {
             logger.error("BeforeAll failed");
             logger.error(e);

@@ -20,6 +20,8 @@ package net.felsing.cryptfetchspring.crypto.config;
 
 import net.felsing.cryptfetchspring.crypto.certs.Certificates;
 
+import java.util.Properties;
+
 
 /**
  * This class provides configuration properties, which can be used to get
@@ -49,6 +51,7 @@ public final class Configuration extends ConfigurationBase {
         config.setProperty("ca.days", Long.toString(30 * 365));
         config.setProperty("server.days", Integer.toString(10 * 365));
         config.setProperty("signer.days", Integer.toString(10 * 365));
+        config.setProperty("certificate.days", Integer.toString(1));
 
         // use either RSA or ECDSA
         if (useEC) {

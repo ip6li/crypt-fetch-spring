@@ -17,6 +17,7 @@
 
 package net.felsing.cryptfetchspring.crypto.certs;
 
+import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.operator.ContentSigner;
@@ -28,6 +29,7 @@ import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import javax.security.auth.x500.X500Principal;
 import java.io.IOException;
 import java.security.KeyPair;
+import java.security.cert.CertificateEncodingException;
 import java.util.List;
 
 
@@ -105,6 +107,13 @@ public final class Csr {
     public PKCS10CertificationRequest getCsr () {
 
         return csr;
+    }
+
+
+    public String getCsrPEM ()
+            throws IOException, CertificateEncodingException {
+
+        return PemUtils.encodeObjectToPEM(csr);
     }
 
 } // class

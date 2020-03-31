@@ -12,27 +12,32 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.context.ServletContextAware;
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
 import java.util.HashMap;
 import java.util.Map;
 
 
 @SpringBootApplication
 @RestController
-public class CryptFetchSpringApplication {
+public class CryptFetchSpringApplication implements ServletContextAware {
     private static Logger logger = LogManager.getLogger(CryptFetchSpringApplication.class);
-    private static ServerConfig serverConfig;
 
+    private static ServerConfig serverConfig;
+    private ServletContext servletContext;
 
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(CryptFetchSpringApplication.class);
-        addInitHooks();
         application.run(args);
     }
 
 
-    public static void addInitHooks() {
+    @PostConstruct
+    public void addInitHooks() {
         try {
+            String absolutePath = servletContext.getRealPath("resources");
+            logger.info("[addInitHooks] absolutePath: " + absolutePath);
             CA ca = CryptInit.getInstance("./");
             serverConfig = ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
         } catch (Exception e) {
@@ -64,9 +69,9 @@ public class CryptFetchSpringApplication {
 
 
     @RequestMapping(value = "/renew", method = RequestMethod.POST)
-    public String renew() {
-        //ToDo: renew client certificate
-        return "renew()";
+    public Map<String, String> renew(@RequestBody String request) {
+        Renew renew = Renew.getInstance();
+        return renew.renew(request);
     }
 
 
@@ -100,4 +105,9 @@ public class CryptFetchSpringApplication {
         return "getRoot()";
     }
 
+    @Override
+    public void setServletContext(ServletContext servletContext) {
+
+        this.servletContext = servletContext;
+    }
 }

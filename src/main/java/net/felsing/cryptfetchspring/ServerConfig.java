@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
@@ -53,7 +54,6 @@ public class ServerConfig {
 
 
     private void putCerts (Map<String, String> target) {
-        HashMap<String, String> certs = new HashMap<>();
         target.put(Constants.ca, ca.getCaCertificatePEM());
         try {
             target.put(Constants.serverCert, serverCertificate.getServerCertificatePEM());
@@ -71,7 +71,7 @@ public class ServerConfig {
             logger.info("config.json found at " + configJsonFile.getFile());
             Map<?, ?> root = (Map<?, ?>) map.get("config");
             Map<? ,?> certs = (Map<?, ?>) root.get("remotekeystore");
-            putCerts((Map<String, String>) certs);
+            putCerts(CheckedCast.castToMapOf(String.class, String.class, certs));
             configuration.put("config", root);
         } catch (IOException e) {
             logger.error(e);
@@ -86,8 +86,36 @@ public class ServerConfig {
 
 
     public HashMap<String, Object> getConfig() {
-        //ToDo: Deliver server/ca certificate and urls for further operations
+
         return configuration;
+    }
+
+
+    public static HashMap<String, Object> createDefaultConfig () {
+        HashMap<String, Object> configRoot = new HashMap<>();
+        HashMap<String, Object> config = new HashMap<>();
+        HashMap<String, Object> keyAlg = new HashMap<>();
+        HashMap<String, Object> encAlg = new HashMap<>();
+        HashMap<String, String> remotekeystore = new HashMap<>();
+
+        keyAlg.put("hash", "SHA-256");
+        keyAlg.put("sign", "RSASSA-PKCS1-V1_5");
+        keyAlg.put("modulusLength", 2048);
+
+        encAlg.put("name", "AES-CBC");
+        encAlg.put("length", 256);
+
+        config.put("same_enc_sign_cert", true);
+        config.put("keyAlg", keyAlg);
+        config.put("encAlg", encAlg);
+        config.put("remotekeystore", remotekeystore);
+        config.put("authURL", "http://127.0.0.1:8080/login");
+        config.put("messageURL", "http://127.0.0.1:8080/message");
+        config.put("renewURL", "http://127.0.0.1:8080/renew");
+
+        configRoot.put("config", config);
+
+        return configRoot;
     }
 
 }

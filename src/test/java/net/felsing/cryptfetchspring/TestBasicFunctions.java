@@ -1,6 +1,8 @@
 package net.felsing.cryptfetchspring;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.*;
+import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -165,5 +167,12 @@ class TestBasicFunctions {
         PKCS10CertificationRequest pkcs10 = csr.getCsr();
         assert pkcs10 != null;
         logger.info("[testEC] pkcs10:\n" + PemUtils.encodeObjectToPEM(pkcs10));
+    }
+
+    @Test
+    public void testDefaultConfig () throws JsonProcessingException {
+        HashMap<String, Object> configMap = ServerConfig.createDefaultConfig();
+        String configJson = JsonUtils.map2json(configMap);
+        logger.info("[testDefaultConfig] " + configJson);
     }
 }
