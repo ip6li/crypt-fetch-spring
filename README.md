@@ -53,6 +53,17 @@ modified: **config.json**.
 
 must be set to your server.
 
+# How Deploy
+ 
+cp ../src/main/resources/config.json .
+mvn clean package spring-boot:repackage
+ 1083  cd target/
+ 1084  l
+ 1085  java -jar crypt-fetch-spring-0.0.1-SNAPSHOT.jar 
+ 1086  l
+
+
+
 # Status
 
 Pre Alpha, mostly incomplete. Do not use in production environments.

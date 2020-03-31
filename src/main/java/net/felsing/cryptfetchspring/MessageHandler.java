@@ -1,9 +1,8 @@
 package net.felsing.cryptfetchspring;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
+import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.cms.CMSException;
@@ -14,8 +13,8 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
 import java.util.List;
+
 
 public class MessageHandler {
     private static Logger logger = LogManager.getLogger(MessageHandler.class);
@@ -38,17 +37,7 @@ public class MessageHandler {
     }
 
 
-    private String doPlainTextRequest (CmsSign.Result plainTextRequest)
-            throws JsonProcessingException {
-        logger.info("[doPlainTextRequest] request: " + new String (plainTextRequest.getContent()));
-        HashMap<String,String> plainTextResponse = new HashMap<>();
-        plainTextResponse.put("foo", "bar");
-        ObjectMapper respMapper = new ObjectMapper();
-        return respMapper.writerWithDefaultPrettyPrinter().writeValueAsString(plainTextResponse);
-    }
-
-
-    public String doRequest (String encryptedRequest)
+    public String doRequest (String encryptedRequest, PayloadIntf callback)
             throws CMSException, OperatorCreationException, CertificateException,
             IOException, InvalidAlgorithmParameterException {
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
@@ -59,7 +48,13 @@ public class MessageHandler {
         List<X509Certificate> clientCertificates = plainTextAndValidatedReq.getCertificates();
         X509Certificate clientCert = clientCertificates.get(0);
 
-        String jsonResponse = doPlainTextRequest(plainTextAndValidatedReq);
+        String jsonResponse;
+        try {
+            jsonResponse = JsonUtils.map2json(callback.doPayload(plainTextAndValidatedReq));
+        } catch (Exception e) {
+            jsonResponse = JsonUtils.map2json(JsonUtils.genError("Cannot process payload"));
+            logger.error(e);
+        }
 
         CMSSignedData cmsSignedResp = cmsSign.signCmsEnveloped(serverKeyPair, serverCert, jsonResponse.getBytes());
 

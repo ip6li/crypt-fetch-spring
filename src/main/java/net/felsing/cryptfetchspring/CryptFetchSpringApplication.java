@@ -69,9 +69,25 @@ public class CryptFetchSpringApplication implements ServletContextAware {
 
 
     @RequestMapping(value = "/renew", method = RequestMethod.POST)
-    public Map<String, String> renew(@RequestBody String request) {
-        Renew renew = Renew.getInstance();
-        return renew.renew(request);
+    public String renew(@RequestBody String request) {
+        MessageHandler messageHandler = MessageHandler.getInstance(
+                CryptInit.getServerCertificate().getServerKeyPair(),
+                CryptInit.getServerCertificate().getServerCertificate(),
+                CryptInit.getCa().getCaX509Certificate());
+
+        try {
+            return messageHandler.doRequest(request, PayloadRenew.getInstance());
+        } catch (Exception e) {
+            logger.warn(e);
+        }
+
+        String returnValue;
+        try {
+            returnValue = JsonUtils.map2json((Map<?, ?>) new HashMap<>().put("error", "renew failed"));
+        } catch (JsonProcessingException e) {
+            returnValue = "error";
+        }
+        return returnValue;
     }
 
 
@@ -84,7 +100,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
                 CryptInit.getCa().getCaX509Certificate());
 
         try {
-            return messageHandler.doRequest(request);
+            return messageHandler.doRequest(request, PayloadMessage.getInstance());
         } catch (Exception e) {
             logger.warn(e);
         }

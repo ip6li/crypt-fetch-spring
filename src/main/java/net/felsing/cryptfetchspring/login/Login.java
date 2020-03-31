@@ -5,6 +5,7 @@ import net.felsing.cryptfetchspring.CryptInit;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
+import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
@@ -26,13 +27,15 @@ import java.util.Map;
 public class Login implements loginIntf {
     private static Logger logger = LogManager.getLogger(Login.class);
 
+    private Configuration config;
+
     final private static String sFalse = Boolean.toString(false);
     final private static String sTrue = Boolean.toString(true);
 
 
     public Login () {
-
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        config = new Configuration();
     }
 
 
@@ -125,9 +128,12 @@ public class Login implements loginIntf {
     }
 
 
-    private String sign(String subject, String csr) throws IOException, CertificateException, OperatorCreationException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
+    private String sign(String subject, String csr)
+            throws IOException, CertificateException, OperatorCreationException,
+            NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
         Signer signer = new Signer();
-        signer.setValidTo(1);
+        int days = Integer.parseInt(config.getConfig().getProperty("certificate.days"));
+        signer.setValidTo(days);
         signer.setSubject(subject);
         return signer.signClient(csr, CryptInit.getCa().getCaPrivateKeyPEM(), CryptInit.getCa().getCaCertificatePEM());
     }

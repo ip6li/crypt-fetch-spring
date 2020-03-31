@@ -2,6 +2,7 @@ package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.*;
+import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
@@ -24,12 +25,13 @@ class TestBasicFunctions {
     private static Logger logger = LogManager.getLogger(TestBasicFunctions.class);
 
     private static TestLib testLib;
-
+    private static Configuration config;
 
     @BeforeAll
     static void initTests() {
         try {
             testLib = TestLib.getInstance();
+            config = new Configuration();
         } catch (Exception e) {
             logger.error("BeforeAll failed");
             logger.error(e);
@@ -122,7 +124,8 @@ class TestBasicFunctions {
 
         Signer signerServer = new Signer();
         signerServer.setValidFrom(-1);
-        signerServer.setValidTo(1);
+        int days = Integer.parseInt(config.getConfig().getProperty("certificate.days"));
+        signerServer.setValidTo(days);
         signerServer.addDomainName("other-name.example.com");
         signerServer.addIpAddress("127.0.0.1");
         signerServer.addIpAddress("::1");
@@ -141,7 +144,7 @@ class TestBasicFunctions {
         assert PemUtils.encodeObjectToPEM((Certificate) serverX509).length()>0;
 
         Signer signerClient = new Signer();
-        signerClient.setValidTo(1);
+        signerClient.setValidTo(days);
         signerClient.addRfc822Name("john.doe@example.com");
         signerClient.addUri("urn:uuid:" + UUID.randomUUID().toString());
         String clientCertificate = signerClient.signClient(

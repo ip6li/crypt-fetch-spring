@@ -4,6 +4,7 @@ import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.certs.Certificates;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
+import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,12 +17,14 @@ public class TestLib {
 
     private static CA ca;
     private static TestLib testLib;
+    private Configuration config;
 
 
     private TestLib () {
         try {
             ca = CryptInit.getInstance("./");
             ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
+            config = new Configuration();
         } catch (Exception e) {
             logger.error("BeforeAll failed");
             logger.error(e);
@@ -60,7 +63,8 @@ public class TestLib {
         certStore.put("csr", csr);
 
         Signer signer = new Signer();
-        signer.setValidTo(1);
+        int days = Integer.parseInt(config.getConfig().getProperty("certificate.days"));
+        signer.setValidTo(days);
 
         certificate = signer.signClient(csr, ca.getCaPrivateKeyPEM(), ca.getCaCertificatePEM());
         certStore.put("certificate", certificate);

@@ -7,6 +7,7 @@ import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
+
+import java.io.IOException;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
@@ -131,9 +135,9 @@ class TestWebApplication {
     }
 
 
-    private String doMessage (KeyPair senderKeyPair, X509Certificate senderCert, byte[] message)
+    private String doMessage (String path, KeyPair senderKeyPair, X509Certificate senderCert, byte[] message)
             throws Exception {
-        String url = "http://localhost:" + port + "/message";
+        String url = "http://localhost:" + port + path;
 
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
         CmsSign cmsSign = new CmsSign();
@@ -160,18 +164,10 @@ class TestWebApplication {
         String clientCertPem = loginResp.get("certificate");
         X509Certificate clientCert = PemUtils.getCertificateFromPem(clientCertPem);
 
-        String response = doMessage(csr.getKeyPair(), clientCert, plainTextSend.getBytes());
-        EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
-        byte[] decryptedResponse = encryptAndDecrypt.decrypt(
-                csr.getKeyPair().getPrivate(),
-                clientCert,
-                response
-        );
-        CmsSign cmsSign = new CmsSign();
-        CmsSign.Result result = cmsSign.verifyCmsSignature(
-                new CMSSignedData(decryptedResponse),
-                PemUtils.getCertificateFromPem(ca)
-        );
+        String response = doMessage("/message", csr.getKeyPair(), clientCert, plainTextSend.getBytes());
+
+        byte[] decryptedResponse = decrypt(csr.getKeyPair().getPrivate(), clientCert, response);
+        CmsSign.Result result = validate(decryptedResponse);
 
         String content = new String(result.getContent());
         logger.info("[testMessage] response content: " + content);
@@ -179,6 +175,55 @@ class TestWebApplication {
 
         //assert content.matches(".*foo.*");
         assert result.isVerifyOk();
+    }
+
+
+    @Test
+    public void testRenew () throws Exception {
+        String username = "myUsername3";
+        String password = "myPassword3";
+
+        // Build a valid certificate
+        Csr csr = testLib.genCsr("CN=cert3");
+        String pemCsr = PemUtils.encodeObjectToPEM(csr);
+        Map<String,String> loginResp = login(username, password, pemCsr);
+
+        String clientCertPem = loginResp.get("certificate");
+        X509Certificate clientCert = PemUtils.getCertificateFromPem(clientCertPem);
+
+        String response = doMessage("/renew", csr.getKeyPair(), clientCert, pemCsr.getBytes());
+
+        byte[] decryptedText = decrypt(csr.getKeyPair().getPrivate(), clientCert, response);
+        CmsSign.Result result = validate(decryptedText);
+        Map<String,String> resultMap = CheckedCast.castToMapOf(String.class,String.class,
+                JsonUtils.json2map(new String(result.getContent())));
+
+        String newCertPEM = resultMap.get("certificate");
+        logger.info("[testRenew] new certificate:\n{}", newCertPEM);
+
+        X509Certificate newCert = PemUtils.getCertificateFromPem(newCertPEM);
+        assert newCert != null;
+    }
+
+
+    private byte[] decrypt (PrivateKey privateKey, X509Certificate x509Certificate, String encryptedText)
+            throws IOException, CMSException {
+        EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
+        return encryptAndDecrypt.decrypt(
+                privateKey,
+                x509Certificate,
+                encryptedText
+        );
+    }
+
+
+    private CmsSign.Result validate (byte[] cmsSignedData)
+            throws CertificateException, CMSException {
+        CmsSign cmsSign = new CmsSign();
+        return cmsSign.verifyCmsSignature(
+                new CMSSignedData(cmsSignedData),
+                PemUtils.getCertificateFromPem(ca)
+        );
     }
 
 }

@@ -9,9 +9,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,12 +66,56 @@ public class ServerConfig {
     }
 
 
+    private ArrayList<String> buildPossibleFileLocations (String filename) {
+        final ArrayList<String> fileLocations = new ArrayList<>();
+        try {
+            Resource configJsonFile = new ClassPathResource(filename);
+            File f = configJsonFile.getFile();
+            if (f.exists()) {
+                fileLocations.add(f.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            // do nothing
+        }
+        fileLocations.add("./" + filename);
+        fileLocations.add(System.getProperty("user.home") + "/.crypt-fetch/" + filename);
+        fileLocations.add("/etc/crypt-fetch/" + filename);
+
+        return fileLocations;
+    }
+
+
+    private File findConfigJson () {
+        final String configJson = "config.json";
+        final ArrayList<String> fileLocations = buildPossibleFileLocations(configJson);
+
+        File[] result=new File[1];
+        fileLocations.forEach((v)->{
+            File test = new File(v);
+            if (test.exists()) {
+                result[0] = test;
+            }
+        });
+        if (result[0]!=null) {
+            return result[0];
+        }
+
+        logger.error("config.json nowhere found");
+        return null;
+    }
+
+
+
     private void putConfigJson () {
         try {
-            Resource configJsonFile = new ClassPathResource("config.json");
+            File fileLocation = findConfigJson();
+            if (fileLocation==null) {
+                logger.info("config.json not found");
+            }
+            assert fileLocation != null;
             ObjectMapper objectMapper = new ObjectMapper();
-            Map<?, ?> map = objectMapper.readValue(new FileInputStream(configJsonFile.getFile()), Map.class);
-            logger.info("config.json found at " + configJsonFile.getFile());
+            Map<?, ?> map = objectMapper.readValue(new FileInputStream(fileLocation.getAbsoluteFile()), Map.class);
+            logger.info("config.json found at " + fileLocation.getAbsolutePath());
             Map<?, ?> root = (Map<?, ?>) map.get("config");
             Map<? ,?> certs = (Map<?, ?>) root.get("remotekeystore");
             putCerts(CheckedCast.castToMapOf(String.class, String.class, certs));
