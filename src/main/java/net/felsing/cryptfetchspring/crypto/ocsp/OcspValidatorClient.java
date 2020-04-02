@@ -52,7 +52,9 @@ public class OcspValidatorClient {
 
         // Step 2: We need the URL of the CA's OCSP responder server. It's somewhere encoded
         // into the certificate! Notice that it's an HTTP URL.
-        URI uri = OcspUtils.ocspUri(certificate);
+        //URI uri = OcspUtils.ocspUri(certificate);
+        URI uri = OcspUtils.ocspUri(issuer);
+
         logger.info("OCSP Responder URI: " + uri);
 
         if (uri == null) {

@@ -33,6 +33,9 @@ public final class CA {
 
     private KeyPair caKeyPair;
     private X509Certificate caX509Certificate;
+    private String caIssuersUri;
+    private String ocspResponderUrl;
+    private boolean ocspCritical = true;
 
 
     public X509Certificate getCaX509Certificate() {
@@ -63,21 +66,18 @@ public final class CA {
             throws OperatorCreationException, CertificateException, IOException,
             NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
-        createCertificationAuthority(mode, subjectDN, validForDays, null);
-    }
-
-
-    public void createCertificationAuthority(Certificates.KeyType mode, String subjectDN, Integer validForDays, String ocspResponderUrl)
-            throws OperatorCreationException, CertificateException, IOException,
-            NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-
         Certificates certificates = new Certificates();
         certificates.addExtendedKeyUsage(KeyPurposeId.anyExtendedKeyUsage);
         certificates.addExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth);
         certificates.addExtendedKeyUsage(KeyPurposeId.id_kp_emailProtection);
+        if (caIssuersUri != null && ocspResponderUrl != null) {
+            certificates.setCaIssuersUri(caIssuersUri);
+            certificates.setOcspResponderUrl(ocspResponderUrl);
+            certificates.setOcspCritical(ocspCritical);
+        }
         switch (mode) {
             case RSA:
-                certificates.createSelfSignedCertificateRSA(subjectDN, validForDays, ocspResponderUrl);
+                certificates.createSelfSignedCertificateRSA(subjectDN, validForDays);
                 break;
             case EC:
                 certificates.createSelfSignedCertificateEC(subjectDN, validForDays);
@@ -103,6 +103,22 @@ public final class CA {
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         String alias = caX509Certificate.getSubjectDN().getName();
         KeyStoreUtils.saveToKeystore(alias, caKeyPair, caX509Certificate, keystoreFile, keystorePassword);
+    }
+
+    public void setOcspCritical(boolean ocspCritical) {
+
+        this.ocspCritical = ocspCritical;
+    }
+
+
+    public void setCaIssuersUri(String caIssuersUri) {
+
+        this.caIssuersUri = caIssuersUri;
+    }
+
+    public void setOcspResponderUrl(String ocspResponderUrl) {
+
+        this.ocspResponderUrl = ocspResponderUrl;
     }
 
 } // class

@@ -6,14 +6,10 @@ import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.ocsp.OcspValidatorClient;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.bouncycastle.asn1.x509.Extension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 
 class OcspValidatorClientTest {
@@ -27,11 +23,12 @@ class OcspValidatorClientTest {
     @BeforeAll
     public static void init() throws Exception {
         ca = new CA();
+        ca.setCaIssuersUri("http://localhost:8080/ocsp");
+        ca.setOcspResponderUrl("http://localhost:8080/issuer");
         ca.createCertificationAuthority(
                 Certificates.KeyType.RSA,
                 "CN=Test CA for OCSP Test",
-                365,
-                "http://localhost:8080/ocsp"
+                365
         );
 
         System.out.println(ca.getCaCertificatePEM());
