@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.operator.OperatorCreationException;
+
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.*;
@@ -33,32 +34,40 @@ public final class CA {
     private KeyPair caKeyPair;
     private X509Certificate caX509Certificate;
 
-    
+
     public X509Certificate getCaX509Certificate() {
 
         return caX509Certificate;
     }
 
-    
+
     public String getCaPrivateKeyPEM() throws IOException, CertificateEncodingException {
-        
+
         return PemUtils.encodeObjectToPEM(caKeyPair.getPrivate());
     }
 
-    
+
     public String getCaCertificatePEM() {
 
         try {
             return PemUtils.encodeObjectToPEM(caX509Certificate);
-        } catch (CertificateEncodingException|IOException e) {
+        } catch (CertificateEncodingException | IOException e) {
             logger.error(e.getMessage());
             e.printStackTrace();
             return "";
         }
     }
 
-    
+
     public void createCertificationAuthority(Certificates.KeyType mode, String subjectDN, Integer validForDays)
+            throws OperatorCreationException, CertificateException, IOException,
+            NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+
+        createCertificationAuthority(mode, subjectDN, validForDays, null);
+    }
+
+
+    public void createCertificationAuthority(Certificates.KeyType mode, String subjectDN, Integer validForDays, String ocspResponderUrl)
             throws OperatorCreationException, CertificateException, IOException,
             NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
@@ -68,7 +77,7 @@ public final class CA {
         certificates.addExtendedKeyUsage(KeyPurposeId.id_kp_emailProtection);
         switch (mode) {
             case RSA:
-                certificates.createSelfSignedCertificateRSA(subjectDN, validForDays);
+                certificates.createSelfSignedCertificateRSA(subjectDN, validForDays, ocspResponderUrl);
                 break;
             case EC:
                 certificates.createSelfSignedCertificateEC(subjectDN, validForDays);
@@ -92,7 +101,7 @@ public final class CA {
 
     public void saveCertificationAuthorityKeystore(String keystoreFile, String keystorePassword)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        String alias=caX509Certificate.getSubjectDN().getName();
+        String alias = caX509Certificate.getSubjectDN().getName();
         KeyStoreUtils.saveToKeystore(alias, caKeyPair, caX509Certificate, keystoreFile, keystorePassword);
     }
 

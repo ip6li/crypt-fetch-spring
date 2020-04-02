@@ -7,6 +7,7 @@ import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.asn1.ocsp.OCSPRequest;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -178,4 +179,5 @@ class TestBasicFunctions {
         String configJson = JsonUtils.map2json(configMap);
         logger.info("[testDefaultConfig] " + configJson);
     }
+    
 }

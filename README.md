@@ -71,3 +71,8 @@ Pre Alpha, mostly incomplete. Do not use in production environments.
 # Associated Projects
 
 * https://github.com/ip6li/crypt-fetch is a JavaScript based client implementation
+
+# Credits
+
+https://magnus-k-karlsson.blogspot.com/
+

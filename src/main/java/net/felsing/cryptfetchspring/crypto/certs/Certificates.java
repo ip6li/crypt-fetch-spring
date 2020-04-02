@@ -20,18 +20,17 @@ package net.felsing.cryptfetchspring.crypto.certs;
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1Primitive;
-import org.bouncycastle.asn1.DERUTF8String;
+import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509ExtensionUtils;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.DigestCalculator;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -41,6 +40,7 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.*;
 import java.security.cert.Certificate;
+import java.security.cert.X509Extension;
 import java.util.*;
 
 
@@ -106,6 +106,14 @@ public final class Certificates {
             throws OperatorCreationException, CertificateException, IOException,
             NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
+        createSelfSignedCertificateRSA(subjectDN, validForDays, null);
+    }
+
+
+    public void createSelfSignedCertificateRSA(String subjectDN, Integer validForDays, String ocspResponderUrl)
+            throws OperatorCreationException, CertificateException, IOException,
+            NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+
         Provider bcProvider = ProviderLoader.getProvider();
         Security.addProvider(bcProvider);
 
@@ -136,6 +144,20 @@ public final class Certificates {
 
         BasicConstraints basicConstraints = new BasicConstraints(true); // <-- true for CA, false for EndEntity
         certBuilder.addExtension(new ASN1ObjectIdentifier(Constants.oidSan), true, basicConstraints); // Basic Constraints is usually marked as critical.
+
+        if (ocspResponderUrl != null) {
+            String caIssuersUri = "http://blah.example.com";
+            boolean critical = true;
+            GeneralName ocspName = new GeneralName(GeneralName.uniformResourceIdentifier, ocspResponderUrl);
+            GeneralName caIssuersName = new GeneralName(GeneralName.uniformResourceIdentifier, caIssuersUri);
+            AccessDescription ocsp = new AccessDescription(AccessDescription.id_ad_ocsp, ocspName);
+            AccessDescription caIssuers = new AccessDescription(AccessDescription.id_ad_caIssuers, caIssuersName);
+            AuthorityInformationAccess authorityInformationAccess = new AuthorityInformationAccess(
+                    new AccessDescription[] { ocsp, caIssuers });
+
+            logger.info("1: {}", authorityInformationAccess);
+            certBuilder.addExtension(Extension.authorityInfoAccess, critical, authorityInformationAccess);
+        }
 
         setExtendedUsage(certBuilder);
 
