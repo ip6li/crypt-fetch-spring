@@ -7,7 +7,6 @@ import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.asn1.ocsp.OCSPRequest;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -69,7 +68,7 @@ class TestBasicFunctions {
     }
 
     @Test
-    void sign()
+    void cmsSign()
             throws Exception {
         HashMap<String, String> clientCert = testLib.genClientCertificate("cert1");
 
@@ -81,7 +80,7 @@ class TestBasicFunctions {
 
         CmsSign cmsSign = new CmsSign();
         CMSSignedData signedText = cmsSign.signCmsEnveloped(keyPair, cert, bPlainText);
-        assert PemUtils.encodeObjectToPEM(signedText).length()>0;
+        assert PemUtils.encodeObjectToPEM(signedText).length() > 0;
 
         CMSSignedData signedTextDetached = cmsSign.signCmsDetached(keyPair, cert, bPlainText);
         assert signedTextDetached != null;
@@ -90,24 +89,11 @@ class TestBasicFunctions {
         logger.info("[sign] isVerifyOk:  ".concat(Boolean.toString(result.isVerifyOk())));
         logger.info("[sign] signed Text: ".concat(new String(result.getContent())));
         int[] count = new int[1];
-        result.getCertificates().forEach((k) -> {
-            try {
-                logger.info("[sign] certificate[".concat(Integer.toString(count[0])).concat("]\n").concat(PemUtils.encodeObjectToPEM(k)));
-                count[0] = count[0] + 1;
-            } catch (Exception e) {
-                logger.error(e);
-            }
-        });
+        result.getCertificates().forEach((k) -> count[0] = count[0] + 1);
+        assert count[0] == 1;
         assert result.isVerifyOk();
     }
 
-
-    @Test
-    void certificate() throws Exception {
-        Certificates certificates = new Certificates();
-        certificates.createSelfSignedCertificateRSA("CN=mySelfSigned Certificate", 1);
-        assert certificates.getX509Certificate() != null;
-    }
 
     @Test
     void generateCsrWithSAN() throws Exception {
@@ -117,11 +103,11 @@ class TestBasicFunctions {
         Csr csr = new Csr();
         csr.createCsr(Certificates.KeyType.RSA, 2048, "CN=my CSR with SAN", sanList);
         String csrPem = PemUtils.encodeObjectToPEM(csr.getCsr());
-        logger.info("[generateCsrWithSAN] csr:\n" + csrPem);
+        assert csrPem.length()>0;
 
         // Test some PemUtils tools
         assert PemUtils.convertPemToPKCS10CertificationRequest(csrPem) != null;
-        assert PemUtils.encodeObjectToPEM(csr.getKeyPair().getPublic()).length()>0;
+        assert PemUtils.encodeObjectToPEM(csr.getKeyPair().getPublic()).length() > 0;
 
         Signer signerServer = new Signer();
         signerServer.setValidFrom(-1);
@@ -135,14 +121,14 @@ class TestBasicFunctions {
                 TestLib.getCa().getCaPrivateKeyPEM(),
                 TestLib.getCa().getCaCertificatePEM()
         );
-        logger.info("[generateCsrWithSAN] serverCertificate:\n" + serverCertificate);
+        assert serverCertificate.length()>0;
         X509Certificate serverX509 = PemUtils.getCertificateFromPem(serverCertificate);
         Objects.requireNonNull(
-                Certificates.getSubjectAlternativeNames(serverX509)).forEach((v) ->
-                logger.info("[generateCsrWithSAN] san: " + v)
-        );
+                Certificates.getSubjectAlternativeNames(serverX509)).forEach((v) -> {
+            assert v.length()>0;
+        });
 
-        assert PemUtils.encodeObjectToPEM((Certificate) serverX509).length()>0;
+        assert PemUtils.encodeObjectToPEM((Certificate) serverX509).length() > 0;
 
         Signer signerClient = new Signer();
         signerClient.setValidTo(days);
@@ -153,16 +139,16 @@ class TestBasicFunctions {
                 TestLib.getCa().getCaPrivateKeyPEM(),
                 TestLib.getCa().getCaCertificatePEM()
         );
-        logger.info("[generateCsrWithSAN] clientCertificate:\n" + clientCertificate);
+        assert clientCertificate.length()>0;
         X509Certificate clientX509 = PemUtils.getCertificateFromPem(clientCertificate);
         Objects.requireNonNull(
-                Certificates.getSubjectAlternativeNames(clientX509)).forEach((v) ->
-                logger.info("[generateCsrWithSAN] san: " + v)
-        );
+                Certificates.getSubjectAlternativeNames(clientX509)).forEach((v) -> {
+            assert v.length() > 0;
+        });
     }
 
     @Test
-    public void testEC () throws Exception {
+    public void testEC() throws Exception {
         KeyPair keyPair = KeyUtils.generateKeypairEC("ECDSA", "prime256v1");
         assert keyPair != null;
 
@@ -170,14 +156,14 @@ class TestBasicFunctions {
         csr.createCsr(Certificates.KeyType.EC, "CN=ec test");
         PKCS10CertificationRequest pkcs10 = csr.getCsr();
         assert pkcs10 != null;
-        logger.info("[testEC] pkcs10:\n" + PemUtils.encodeObjectToPEM(pkcs10));
+        assert PemUtils.encodeObjectToPEM(pkcs10).length() > 300;
     }
 
     @Test
-    public void testDefaultConfig () throws JsonProcessingException {
+    public void testDefaultConfig() throws JsonProcessingException {
         HashMap<String, Object> configMap = ServerConfig.createDefaultConfig();
         String configJson = JsonUtils.map2json(configMap);
-        logger.info("[testDefaultConfig] " + configJson);
+        assert configJson.length() > 0;
     }
-    
+
 }

@@ -127,8 +127,6 @@ class TestWebApplication {
 
         boolean authenticated = Boolean.parseBoolean(respMap.get("authenticated"));
         String certificate = respMap.get("certificate");
-        logger.info("authenticated: " + authenticated);
-        logger.info("certificate:\n" + certificate);
 
         assert authenticated;
         assert certificate != null;
@@ -199,8 +197,6 @@ class TestWebApplication {
                 JsonUtils.json2map(new String(result.getContent())));
 
         String newCertPEM = resultMap.get("certificate");
-        logger.info("[testRenew] new certificate:\n{}", newCertPEM);
-
         X509Certificate newCert = PemUtils.getCertificateFromPem(newCertPEM);
         assert newCert != null;
     }

@@ -8,6 +8,7 @@ import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
@@ -20,20 +21,15 @@ public class TestLib {
     private Configuration config;
 
 
-    private TestLib () {
-        try {
-            ca = CryptInit.getInstance("./");
-            ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
-            config = new Configuration();
-        } catch (Exception e) {
-            logger.error("BeforeAll failed");
-            logger.error(e);
-        }
+    private TestLib() throws Exception {
+        ca = CryptInit.getInstance("./");
+        ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
+        config = new Configuration();
     }
 
-    public static TestLib getInstance () {
+    public static TestLib getInstance() throws Exception {
 
-        if (testLib==null) {
+        if (testLib == null) {
             testLib = new TestLib();
         }
 
@@ -41,14 +37,14 @@ public class TestLib {
     }
 
 
-    public Csr genCsr (String dn) throws Exception {
+    public Csr genCsr(String dn) throws Exception {
         Csr request = new Csr();
         request.createCsr(Certificates.KeyType.RSA, "CN=".concat(dn));
         return request;
     }
 
 
-    public HashMap<String, String> genClientCertificate (String cn) throws Exception {
+    public HashMap<String, String> genClientCertificate(String cn) throws Exception {
         HashMap<String, String> certStore = new HashMap<>();
         Csr request = new Csr();
 
@@ -73,12 +69,12 @@ public class TestLib {
     }
 
 
-    public static CA getCa () {
+    public static CA getCa() {
 
         return ca;
     }
 
-    public static X509Certificate getCaCertificate () {
+    public static X509Certificate getCaCertificate() {
 
         return ca.getCaX509Certificate();
     }
