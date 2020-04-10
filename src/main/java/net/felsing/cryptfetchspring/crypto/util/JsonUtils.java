@@ -13,7 +13,7 @@ import java.util.Map;
 
 
 public final class JsonUtils {
-    private static Logger logger = LogManager.getLogger(JsonUtils.class);
+    private static final Logger logger = LogManager.getLogger(JsonUtils.class);
 
     private JsonUtils () { }
 

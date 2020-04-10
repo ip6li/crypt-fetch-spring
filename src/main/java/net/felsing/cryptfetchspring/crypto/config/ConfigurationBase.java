@@ -23,7 +23,7 @@ import java.util.Properties;
 
 
 public abstract class ConfigurationBase {
-    private static Logger logger = LogManager.getLogger(ConfigurationBase.class);
+    private static final Logger logger = LogManager.getLogger(ConfigurationBase.class);
 
     protected static final Properties config = new Properties();
 

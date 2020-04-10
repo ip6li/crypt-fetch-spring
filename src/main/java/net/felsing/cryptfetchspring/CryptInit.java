@@ -43,7 +43,7 @@ public class CryptInit {
         properties = new Configuration().getConfig();
         final File caFile = new File(properties.getProperty("caFile"));
         final String keyStorePassword = properties.getProperty("keyStorePassword");
-        Certificates.KeyType mode = Certificates.KeyType.valueOf(properties.getProperty("keyMode"));
+        Constants.KeyType mode = Constants.KeyType.valueOf(properties.getProperty("keyMode"));
 
         if (!caFile.exists()) {
             String caDN = properties.getProperty("ca.dnPrefix") +
@@ -68,7 +68,7 @@ public class CryptInit {
     private static void generateNewCertificate(ServerCertificate cert, String serverKeyStoreFile, String serverKeyStorePassword)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
 
-        Certificates.KeyType mode = Certificates.KeyType.valueOf(properties.getProperty("keyMode"));
+        Constants.KeyType mode = Constants.KeyType.valueOf(properties.getProperty("keyMode"));
 
         logger.info("generating new certificate: " + serverKeyStoreFile);
 

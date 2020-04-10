@@ -20,6 +20,8 @@ package net.felsing.cryptfetchspring.crypto.config;
 
 public final class Constants {
 
+    public enum KeyType { RSA, EC }
+
     // attribute ids
     public static final String SHA256withECDSA = "SHA256withECDSA";
     public static final String SHA256withRSA = "SHA256withRSA";

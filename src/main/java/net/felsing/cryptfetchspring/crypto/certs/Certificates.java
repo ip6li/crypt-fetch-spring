@@ -42,9 +42,7 @@ import java.util.*;
 
 
 public final class Certificates {
-    private static Logger logger = LogManager.getLogger(Certificates.class);
-
-    public enum KeyType { RSA, EC }
+    private static final Logger logger = LogManager.getLogger(Certificates.class);
 
     private static final int validDefault = 365;
 
@@ -108,7 +106,7 @@ public final class Certificates {
         Provider bcProvider = ProviderLoader.getProvider();
         Security.addProvider(bcProvider);
 
-        KeyPair keyPair = KeyUtils.generateKeypair(KeyType.RSA, 2048);
+        KeyPair keyPair = KeyUtils.generateKeypair(Constants.KeyType.RSA, 2048);
 
         Date startDate = new Date();
         Date endDate;
@@ -162,7 +160,7 @@ public final class Certificates {
         Provider bcProvider = ProviderLoader.getProvider();
         Security.addProvider(bcProvider);
 
-        KeyPair keypair = KeyUtils.generateKeypair(KeyType.EC, 256);
+        KeyPair keypair = KeyUtils.generateKeypair(Constants.KeyType.EC, 256);
 
         X500Name subject = new X500Name(subjectDN);
 

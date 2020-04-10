@@ -40,7 +40,7 @@ import java.util.List;
 
 
 public final class CmsSign {
-    private static Logger logger = LogManager.getLogger(CmsSign.class);
+    private static final Logger logger = LogManager.getLogger(CmsSign.class);
 
     static {
         Security.addProvider(ProviderLoader.getProvider());

@@ -4,6 +4,7 @@ import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.certs.Certificates;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
+import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.ocsp.OcspValidatorClient;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,7 +27,7 @@ class OcspValidatorClientTest {
         ca.setCaIssuersUri("http://localhost:8080/ocsp");
         ca.setOcspResponderUrl("http://localhost:8080/issuer");
         ca.createCertificationAuthority(
-                Certificates.KeyType.RSA,
+                Constants.KeyType.RSA,
                 "CN=Test CA for OCSP Test",
                 365
         );
@@ -35,12 +36,12 @@ class OcspValidatorClientTest {
         signer = new Signer();
 
         Csr csr = new Csr();
-        csr.createCsr(Certificates.KeyType.RSA, "CN=Test Certificate");
+        csr.createCsr(Constants.KeyType.RSA, "CN=Test Certificate");
         testSubjectKeyPair = csr.getKeyPair();
 
         signer.setSubject(csr.getCsr().getSubject().toString());
         String certPEM = signer.signServer(
-                PemUtils.encodeObjectToPEM(csr),
+                PemUtils.encodeObjectToPEM(csr.getCsr()),
                 ca.getCaPrivateKeyPEM(),
                 ca.getCaCertificatePEM()
         );

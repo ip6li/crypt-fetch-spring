@@ -17,19 +17,19 @@
 
 package net.felsing.cryptfetchspring.crypto.certs;
 
+import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.operator.OperatorCreationException;
-
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.*;
 
 
 public final class CA {
-    private static Logger logger = LogManager.getLogger(CA.class);
+    private static final Logger logger = LogManager.getLogger(CA.class);
 
     private KeyPair caKeyPair;
     private X509Certificate caX509Certificate;
@@ -62,7 +62,7 @@ public final class CA {
     }
 
 
-    public void createCertificationAuthority(Certificates.KeyType mode, String subjectDN, Integer validForDays)
+    public void createCertificationAuthority(Constants.KeyType mode, String subjectDN, Integer validForDays)
             throws OperatorCreationException, CertificateException, IOException,
             NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 

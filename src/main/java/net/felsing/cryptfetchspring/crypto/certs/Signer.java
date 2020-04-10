@@ -53,7 +53,7 @@ import java.util.List;
 
 
 public final class Signer {
-    private static Logger logger = LogManager.getLogger(Signer.class);
+    private static final Logger logger = LogManager.getLogger(Signer.class);
 
     static {
         Security.addProvider(ProviderLoader.getProvider());

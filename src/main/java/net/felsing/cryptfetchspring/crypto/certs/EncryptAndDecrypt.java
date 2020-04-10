@@ -46,7 +46,7 @@ import java.util.Iterator;
 
 
 public final class EncryptAndDecrypt {
-    private static Logger logger = LogManager.getLogger(EncryptAndDecrypt.class);
+    private static final Logger logger = LogManager.getLogger(EncryptAndDecrypt.class);
 
     private static final String mdName = "SHA-512";
     private static final String mdgName = "MGF1";

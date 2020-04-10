@@ -7,7 +7,7 @@ import java.security.Security;
 
 
 public final class ProviderLoader {
-    private static Logger logger = LogManager.getLogger(ProviderLoader.class);
+    private static final Logger logger = LogManager.getLogger(ProviderLoader.class);
 
     private static Provider provider;
 

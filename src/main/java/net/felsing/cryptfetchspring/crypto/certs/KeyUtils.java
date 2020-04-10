@@ -1,6 +1,7 @@
 package net.felsing.cryptfetchspring.crypto.certs;
 
 
+import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
 
 import java.security.*;
@@ -42,7 +43,7 @@ public final class KeyUtils {
      * @throws NoSuchProviderException  from KeyPairGenerator
      * @throws NoSuchAlgorithmException from KeyPairGenerator
      */
-    public static KeyPair generateKeypair(Certificates.KeyType keyType, int size)
+    public static KeyPair generateKeypair(Constants.KeyType keyType, int size)
             throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
         switch (keyType) {

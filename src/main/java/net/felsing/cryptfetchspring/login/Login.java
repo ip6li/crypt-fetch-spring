@@ -25,9 +25,9 @@ import java.util.Map;
 
 
 public class Login implements loginIntf {
-    private static Logger logger = LogManager.getLogger(Login.class);
+    private static final Logger logger = LogManager.getLogger(Login.class);
 
-    private Configuration config;
+    private final Configuration config;
 
     final private static String sFalse = Boolean.toString(false);
     final private static String sTrue = Boolean.toString(true);

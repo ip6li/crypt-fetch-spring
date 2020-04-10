@@ -38,7 +38,7 @@ import io.netty.handler.ssl.OpenSsl;
  */
 @SuppressWarnings("unused")
 public class OcspValidatorClient {
-    private static Logger logger = LogManager.getLogger(OcspValidatorClient.class);
+    private static final Logger logger = LogManager.getLogger(OcspValidatorClient.class);
 
     private OcspValidatorClient() {}
 

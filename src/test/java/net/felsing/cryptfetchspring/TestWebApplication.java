@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
-
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -27,7 +26,7 @@ import java.util.Map;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = CryptFetchSpringApplication.class)
 class TestWebApplication {
-    private static Logger logger = LogManager.getLogger(TestWebApplication.class);
+    private static final Logger logger = LogManager.getLogger(TestWebApplication.class);
 
     private static TestLib testLib;
     private static String config=null;
@@ -121,7 +120,7 @@ class TestWebApplication {
         String username = "myUserName";
         String password = "myPassword";
         Csr csr = testLib.genCsr("CN=cert1");
-        String pemCsr = PemUtils.encodeObjectToPEM(csr);
+        String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
 
         Map<String, String> respMap = login(username, password, pemCsr);
 
@@ -153,7 +152,7 @@ class TestWebApplication {
         String username = "myUsername2";
         String password = "myPassword2";
         Csr csr = testLib.genCsr("CN=cert2");
-        String pemCsr = PemUtils.encodeObjectToPEM(csr);
+        String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
 
         String plainTextSend = "Hello world! Umlaute: äöüÄÖÜß€";
 
@@ -183,7 +182,7 @@ class TestWebApplication {
 
         // Build a valid certificate
         Csr csr = testLib.genCsr("CN=cert3");
-        String pemCsr = PemUtils.encodeObjectToPEM(csr);
+        String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
         Map<String,String> loginResp = login(username, password, pemCsr);
 
         String clientCertPem = loginResp.get("certificate");

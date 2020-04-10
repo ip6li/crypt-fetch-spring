@@ -1,6 +1,6 @@
 package net.felsing.cryptfetchspring.crypto.util;
 
-import net.felsing.cryptfetchspring.crypto.certs.Csr;
+
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +24,7 @@ import java.security.cert.*;
  * from and to Java classes
  ***************************************************************************************************************/
 public final class PemUtils {
-    private static Logger logger = LogManager.getLogger(PemUtils.class);
+    private static final Logger logger = LogManager.getLogger(PemUtils.class);
 
     /**
      * Utilities to encode different X.509/Key objects to PEM
@@ -84,12 +84,6 @@ public final class PemUtils {
     public static String encodeObjectToPEM (PublicKey key) throws CertificateEncodingException, IOException {
 
         return encodeObjectToPEM_(key);
-    }
-
-
-    public static String encodeObjectToPEM (Csr csr) throws CertificateEncodingException, IOException {
-
-        return encodeObjectToPEM_(csr.getCsr());
     }
 
 

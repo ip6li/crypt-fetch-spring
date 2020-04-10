@@ -1,20 +1,19 @@
 package net.felsing.cryptfetchspring;
 
 import net.felsing.cryptfetchspring.crypto.certs.CA;
-import net.felsing.cryptfetchspring.crypto.certs.Certificates;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
+import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
 
 public class TestLib {
-    private static Logger logger = LogManager.getLogger(TestLib.class);
+    private static final Logger logger = LogManager.getLogger(TestLib.class);
 
     private static CA ca;
     private static TestLib testLib;
@@ -39,7 +38,7 @@ public class TestLib {
 
     public Csr genCsr(String dn) throws Exception {
         Csr request = new Csr();
-        request.createCsr(Certificates.KeyType.RSA, "CN=".concat(dn));
+        request.createCsr(Constants.KeyType.RSA, "CN=".concat(dn));
         return request;
     }
 
@@ -52,7 +51,7 @@ public class TestLib {
         String csr;
         String certificate;
 
-        request.createCsr(Certificates.KeyType.RSA, "CN=".concat(cn));
+        request.createCsr(Constants.KeyType.RSA, "CN=".concat(cn));
         privateKey = PemUtils.encodeObjectToPEM(request.getKeyPair().getPrivate());
         csr = PemUtils.encodeObjectToPEM(request.getCsr());
         certStore.put("privateKey", privateKey);

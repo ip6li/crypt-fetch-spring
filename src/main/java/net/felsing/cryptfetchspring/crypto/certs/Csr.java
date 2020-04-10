@@ -17,6 +17,7 @@
 
 package net.felsing.cryptfetchspring.crypto.certs;
 
+import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.*;
@@ -47,7 +48,7 @@ public final class Csr {
      *                          EC: should be >= 256 for EC
      * @param dn :          DN
      */
-    public void createCsr(Certificates.KeyType keyType, int size, String dn, List<GeneralName> sanList) throws Exception {
+    public void createCsr(Constants.KeyType keyType, int size, String dn, List<GeneralName> sanList) throws Exception {
 
         keyPair = KeyUtils.generateKeypair(keyType, size);
 
@@ -67,13 +68,13 @@ public final class Csr {
     }
 
 
-    public void createCsr(Certificates.KeyType keyType, int size, String dn) throws Exception {
+    public void createCsr(Constants.KeyType keyType, int size, String dn) throws Exception {
 
         createCsr(keyType, size, dn, null);
     }
 
 
-    public void createCsr(Certificates.KeyType keyType, String dn) throws Exception {
+    public void createCsr(Constants.KeyType keyType, String dn) throws Exception {
 
         int size;
 

@@ -18,6 +18,7 @@
 package net.felsing.cryptfetchspring.crypto.certs;
 
 
+import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import java.io.IOException;
 import java.security.*;
@@ -48,7 +49,7 @@ public final class ServerCertificate {
         return PemUtils.encodeObjectToPEM(serverCertificate);
     }
 
-    public void generate (CA ca, String dn, Certificates.KeyType mode, int validForDays) {
+    public void generate (CA ca, String dn, Constants.KeyType mode, int validForDays) {
 
         if (validForDays==0) { // 0 for default of 1 year
             validForDays = 365;
@@ -73,7 +74,7 @@ public final class ServerCertificate {
 
             signer.setValidTo(validForDays);
             String signedCertificate = signer.signServer(
-                    PemUtils.encodeObjectToPEM(csr),
+                    PemUtils.encodeObjectToPEM(csr.getCsr()),
                     ca.getCaPrivateKeyPEM(),
                     ca.getCaCertificatePEM()
             );

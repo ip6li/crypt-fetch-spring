@@ -17,12 +17,6 @@
 
 package net.felsing.cryptfetchspring.crypto.config;
 
-
-import net.felsing.cryptfetchspring.crypto.certs.Certificates;
-
-import java.util.Properties;
-
-
 /**
  * This class provides configuration properties, which can be used to get
  * as Properties or JsonObject. Properties with prefix "js." are provided
@@ -56,13 +50,13 @@ public final class Configuration extends ConfigurationBase {
         // use either RSA or ECDSA
         if (useEC) {
             config.setProperty("js.sign", "ECDSA");
-            config.setProperty("keyMode", Certificates.KeyType.EC.toString());
+            config.setProperty("keyMode", Constants.KeyType.EC.toString());
             config.setProperty("server.DN", "CN=The server certificate ECDSA");
             config.setProperty("signer.DN", "CN=The signer certificate ECDSA");
             config.setProperty("caFile", "CA-ECDSA.p12");
         } else {
             config.setProperty("js.sign", "RSASSA-PKCS1-V1_5");
-            config.setProperty("keyMode", Certificates.KeyType.RSA.toString());
+            config.setProperty("keyMode", Constants.KeyType.RSA.toString());
             config.setProperty("server.DN", "CN=The server certificate RSA");
             config.setProperty("signer.DN", "CN=The signer certificate RSA");
             config.setProperty("caFile", "CA-RSA.p12");

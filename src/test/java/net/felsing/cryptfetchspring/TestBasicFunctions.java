@@ -3,6 +3,7 @@ package net.felsing.cryptfetchspring;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
+import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.apache.logging.log4j.LogManager;
@@ -101,7 +102,7 @@ class TestBasicFunctions {
         // this SAN will be thrown away by signer
         sanList.add(new GeneralName(GeneralName.dNSName, "name.example.com"));
         Csr csr = new Csr();
-        csr.createCsr(Certificates.KeyType.RSA, 2048, "CN=my CSR with SAN", sanList);
+        csr.createCsr(Constants.KeyType.RSA, 2048, "CN=my CSR with SAN", sanList);
         String csrPem = PemUtils.encodeObjectToPEM(csr.getCsr());
         assert csrPem.length()>0;
 
@@ -117,7 +118,7 @@ class TestBasicFunctions {
         signerServer.addIpAddress("127.0.0.1");
         signerServer.addIpAddress("::1");
         String serverCertificate = signerServer.signServer(
-                PemUtils.encodeObjectToPEM(csr),
+                PemUtils.encodeObjectToPEM(csr.getCsr()),
                 TestLib.getCa().getCaPrivateKeyPEM(),
                 TestLib.getCa().getCaCertificatePEM()
         );
@@ -135,7 +136,7 @@ class TestBasicFunctions {
         signerClient.addRfc822Name("john.doe@example.com");
         signerClient.addUri("urn:uuid:" + UUID.randomUUID().toString());
         String clientCertificate = signerClient.signClient(
-                PemUtils.encodeObjectToPEM(csr),
+                PemUtils.encodeObjectToPEM(csr.getCsr()),
                 TestLib.getCa().getCaPrivateKeyPEM(),
                 TestLib.getCa().getCaCertificatePEM()
         );
@@ -153,7 +154,7 @@ class TestBasicFunctions {
         assert keyPair != null;
 
         Csr csr = new Csr();
-        csr.createCsr(Certificates.KeyType.EC, "CN=ec test");
+        csr.createCsr(Constants.KeyType.EC, "CN=ec test");
         PKCS10CertificationRequest pkcs10 = csr.getCsr();
         assert pkcs10 != null;
         assert PemUtils.encodeObjectToPEM(pkcs10).length() > 300;
