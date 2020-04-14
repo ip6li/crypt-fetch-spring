@@ -22,7 +22,7 @@ import java.util.Map;
 @SpringBootApplication
 @RestController
 public class CryptFetchSpringApplication implements ServletContextAware {
-    private static Logger logger = LogManager.getLogger(CryptFetchSpringApplication.class);
+    private static final Logger logger = LogManager.getLogger(CryptFetchSpringApplication.class);
 
     private static ServerConfig serverConfig;
     private ServletContext servletContext;

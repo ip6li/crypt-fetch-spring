@@ -17,11 +17,11 @@ import java.util.List;
 
 
 public class MessageHandler {
-    private static Logger logger = LogManager.getLogger(MessageHandler.class);
+    private static final Logger logger = LogManager.getLogger(MessageHandler.class);
 
-    private KeyPair serverKeyPair;
-    private X509Certificate serverCert;
-    private X509Certificate ca;
+    private final KeyPair serverKeyPair;
+    private final X509Certificate serverCert;
+    private final X509Certificate ca;
 
 
     private MessageHandler (KeyPair serverKeyPair, X509Certificate serverCert, X509Certificate ca) {

@@ -98,6 +98,7 @@ public final class OcspUtils {
             ASN1Encodable value = subSequence.getObjectAt(1);
 
             if (key.equals(OcspUtils.OCSP_RESPONDER_OID) && value instanceof DERTaggedObject) {
+                //noinspection unchecked
                 return ((Class<T>) DERTaggedObject.class).cast(value);
             }
         }

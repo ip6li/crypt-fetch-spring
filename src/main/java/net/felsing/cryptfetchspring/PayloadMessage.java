@@ -8,7 +8,7 @@ import java.util.Map;
 
 
 public class PayloadMessage implements PayloadIntf {
-    private static Logger logger = LogManager.getLogger(MessageHandler.class);
+    private static final Logger logger = LogManager.getLogger(MessageHandler.class);
 
     private PayloadMessage () {}
 

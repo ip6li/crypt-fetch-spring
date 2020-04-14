@@ -13,10 +13,10 @@ import java.util.Map;
 
 
 public class PayloadRenew implements PayloadIntf {
-    private static Logger logger = LogManager.getLogger(PayloadRenew.class);
+    private static final Logger logger = LogManager.getLogger(PayloadRenew.class);
 
-    private CA ca;
-    private Configuration config;
+    private final CA ca;
+    private final Configuration config;
 
 
     private PayloadRenew() {

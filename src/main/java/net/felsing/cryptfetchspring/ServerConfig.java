@@ -23,10 +23,11 @@ import java.util.Map;
  * Handles configuration items needed by service consumers
  *************************************************************************************************************/
 public class ServerConfig {
-    private static Logger logger = LogManager.getLogger(ServerConfig.class);
+    private static final Logger logger = LogManager.getLogger(ServerConfig.class);
 
-    private ServerCertificate serverCertificate, signerCertificate;
-    private CA ca;
+    private final ServerCertificate serverCertificate;
+    private final ServerCertificate signerCertificate;
+    private final CA ca;
     private static ServerConfig serverConfig = null;
     private static HashMap<String, Object> configuration;
 

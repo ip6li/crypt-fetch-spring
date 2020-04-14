@@ -2,7 +2,6 @@ package net.felsing.cryptfetchspring;
 
 
 import net.felsing.cryptfetchspring.crypto.certs.CA;
-import net.felsing.cryptfetchspring.crypto.certs.Certificates;
 import net.felsing.cryptfetchspring.crypto.certs.KeyStoreUtils;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
@@ -22,7 +21,7 @@ import java.security.cert.CertificateException;
 import java.util.Properties;
 
 public class CryptInit {
-    private static Logger logger = LogManager.getLogger(CryptInit.class.getName());
+    private static final Logger logger = LogManager.getLogger(CryptInit.class.getName());
 
     private static CA ca;
     private static ServerCertificate serverCertificate, serverSignerCertificate;
