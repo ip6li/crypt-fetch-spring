@@ -70,6 +70,7 @@ public final class CA {
         certificates.addExtendedKeyUsage(KeyPurposeId.anyExtendedKeyUsage);
         certificates.addExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth);
         certificates.addExtendedKeyUsage(KeyPurposeId.id_kp_emailProtection);
+        certificates.setValidForDays(validForDays);
         if (caIssuersUri != null && ocspResponderUrl != null) {
             certificates.setCaIssuersUri(caIssuersUri);
             certificates.setOcspResponderUrl(ocspResponderUrl);
@@ -77,10 +78,10 @@ public final class CA {
         }
         switch (mode) {
             case RSA:
-                certificates.createSelfSignedCertificateRSA(subjectDN, validForDays);
+                certificates.createSelfSignedCertificateRSA(subjectDN);
                 break;
             case EC:
-                certificates.createSelfSignedCertificateEC(subjectDN, validForDays);
+                certificates.createSelfSignedCertificateEC(subjectDN);
                 break;
         }
 

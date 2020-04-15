@@ -23,7 +23,7 @@ import java.util.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TestBasicFunctions {
-    private static Logger logger = LogManager.getLogger(TestBasicFunctions.class);
+    private static final Logger logger = LogManager.getLogger(TestBasicFunctions.class);
 
     private static TestLib testLib;
     private static Configuration config;
@@ -157,7 +157,9 @@ class TestBasicFunctions {
         csr.createCsr(Constants.KeyType.EC, "CN=ec test");
         PKCS10CertificationRequest pkcs10 = csr.getCsr();
         assert pkcs10 != null;
-        assert PemUtils.encodeObjectToPEM(pkcs10).length() > 300;
+        String pkcs10pem = PemUtils.encodeObjectToPEM(pkcs10);
+        assert pkcs10pem.length() > 300;
+        logger.info(pkcs10pem);
     }
 
     @Test
@@ -167,4 +169,33 @@ class TestBasicFunctions {
         assert configJson.length() > 0;
     }
 
+    private Certificates buildSelfSignedCertificate () {
+        Certificates certificates = new Certificates();
+        certificates.setValidForDays(1);
+        certificates.setOcspResponderUrl("http://localhost/ocsp");
+        certificates.setCaIssuersUri("http://localhost/issuer");
+        return certificates;
+    }
+
+    @Test
+    public void testSelfSignedCertificateEC() throws Exception {
+        Certificates certificates = buildSelfSignedCertificate();
+        certificates.createSelfSignedCertificateEC("CN=My Selfsigned Cert EC", 256);
+        KeyPair keyPair = certificates.getKeyPair();
+        X509Certificate x509Certificate = certificates.getX509Certificate();
+        assert keyPair != null;
+        assert x509Certificate != null;
+        logger.info("testSelfSignedCertificateEC:\n{}", PemUtils.encodeObjectToPEM(x509Certificate));
+    }
+
+    @Test
+    public void testSelfSignedCertificateRSA() throws Exception {
+        Certificates certificates = buildSelfSignedCertificate();
+        certificates.createSelfSignedCertificateRSA("CN=My Selfsigned Cert RSA", 2048);
+        KeyPair keyPair = certificates.getKeyPair();
+        X509Certificate x509Certificate = certificates.getX509Certificate();
+        assert keyPair != null;
+        assert x509Certificate != null;
+        logger.info("testSelfSignedCertificateRSA:\n{}", PemUtils.encodeObjectToPEM(x509Certificate));
+    }
 }
