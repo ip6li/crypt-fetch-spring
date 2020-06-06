@@ -55,13 +55,11 @@ must be set to your server.
 
 # How Deploy
  
-cp ../src/main/resources/config.json .
-mvn clean package spring-boot:repackage
- 1083  cd target/
- 1084  l
- 1085  java -jar crypt-fetch-spring-0.0.1-SNAPSHOT.jar 
- 1086  l
-
+    cd target/
+    cp ../src/main/resources/config.json .
+    mvn clean package spring-boot:repackage
+    java -jar crypt-fetch-spring-0.0.2-SNAPSHOT.jar 
+ 
 # Security Considerations
 
 This PoC makes web security infrastructure mostly useless due to encryption of payload
