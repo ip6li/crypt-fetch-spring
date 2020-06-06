@@ -97,7 +97,9 @@ public final class CA {
 
         caKeyPair = KeyStoreUtils.getKeypairFromKeystore(keyStore, keystorePassword);
         caX509Certificate = KeyStoreUtils.getCertificateFromKeystore(keyStore, keystorePassword);
-        logger.info("Using existing CA certificate " + keystoreFile);
+        if (logger.isInfoEnabled()) {
+            logger.info("Using existing CA certificate " + keystoreFile);
+        }
     }
 
     public void saveCertificationAuthorityKeystore(String keystoreFile, String keystorePassword)
@@ -105,6 +107,7 @@ public final class CA {
         String alias = caX509Certificate.getSubjectDN().getName();
         KeyStoreUtils.saveToKeystore(alias, caKeyPair, caX509Certificate, keystoreFile, keystorePassword);
     }
+
 
     public void setOcspCritical(boolean ocspCritical) {
 

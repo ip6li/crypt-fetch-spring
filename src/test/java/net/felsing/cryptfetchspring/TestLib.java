@@ -23,6 +23,7 @@ public class TestLib {
     private TestLib() throws Exception {
         logger.debug("TestLib initialized");
         ca = CryptInit.getInstance("./");
+        ca.setOcspCritical(false);
         ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
         config = new Configuration();
     }

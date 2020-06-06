@@ -5,8 +5,6 @@ import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-
-import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,8 +36,7 @@ public class PayloadRenew implements PayloadIntf {
             throws Exception {
         long errNoCounter = 100000; // create unique error numbers on each step
 
-        String pkcs10ReqPEM = new String(plainTextContent.getContent(), StandardCharsets.UTF_8);
-        PKCS10CertificationRequest pkcs10Req = PemUtils.convertPemToPKCS10CertificationRequest(pkcs10ReqPEM);
+        PKCS10CertificationRequest pkcs10Req = PemUtils.convertPemToPKCS10CertificationRequest(plainTextContent.getContent());
 
         errNoCounter++;
         X509Certificate x509Certificate = plainTextContent.getCertificates().get(0);

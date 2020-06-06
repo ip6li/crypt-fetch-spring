@@ -250,9 +250,22 @@ public final class PemUtils {
      */
     public static PKCS10CertificationRequest convertPemToPKCS10CertificationRequest(String pem)
             throws IOException {
+
+        return convertPemToPKCS10CertificationRequest (pem.getBytes(StandardCharsets.UTF_8));
+    }
+
+
+    /**
+     * Converts PEM encoded PKCS#10 request to PKCS10CertificationRequest
+     *
+     * @param pem               PEM encoded PKCS#10 request
+     * @return                  PKCS10CertificationRequest or Exception
+     */
+    public static PKCS10CertificationRequest convertPemToPKCS10CertificationRequest(byte[] pem)
+            throws IOException {
         PKCS10CertificationRequest csr = null;
         ByteArrayInputStream pemStream;
-        pemStream = new ByteArrayInputStream(pem.getBytes(StandardCharsets.UTF_8));
+        pemStream = new ByteArrayInputStream(pem);
 
         Reader pemReader = new BufferedReader(new InputStreamReader(pemStream));
         PEMParser pemParser = new PEMParser(pemReader);

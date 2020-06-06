@@ -102,6 +102,7 @@ class TestWebApplication {
 
         HashMap<String,String> map = new HashMap<>();
         map.put("username", username);
+        // file deepcode ignore test: This is a test
         map.put("password", password);
         map.put("csr", pemCsr);
         String jsonResult = JsonUtils.map2json(map);
@@ -167,8 +168,10 @@ class TestWebApplication {
         CmsSign.Result result = validate(decryptedResponse);
 
         String content = new String(result.getContent());
-        logger.info("[testMessage] response content: " + content);
-        logger.info("[testMessage] response validated: " + result.isVerifyOk());
+        if (logger.isInfoEnabled()) {
+            logger.info("[testMessage] response content: " + content);
+            logger.info("[testMessage] response validated: " + result.isVerifyOk());
+        }
 
         //assert content.matches(".*foo.*");
         assert result.isVerifyOk();
