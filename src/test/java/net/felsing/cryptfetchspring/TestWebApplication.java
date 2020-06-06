@@ -102,7 +102,6 @@ class TestWebApplication {
 
         HashMap<String,String> map = new HashMap<>();
         map.put("username", username);
-        // file deepcode ignore test: This is a test
         map.put("password", password);
         map.put("csr", pemCsr);
         String jsonResult = JsonUtils.map2json(map);
@@ -173,7 +172,10 @@ class TestWebApplication {
             logger.info("[testMessage] response validated: " + result.isVerifyOk());
         }
 
-        //assert content.matches(".*foo.*");
+        Map<String, String> contentHashMap = CheckedCast.castToMapOf(String.class, String.class, JsonUtils.json2map(content));
+        assert (contentHashMap.containsKey("foo"));
+        assert (contentHashMap.containsValue("bar äöüÄÖÜß€"));
+
         assert result.isVerifyOk();
     }
 
@@ -195,6 +197,7 @@ class TestWebApplication {
 
         byte[] decryptedText = decrypt(csr.getKeyPair().getPrivate(), clientCert, response);
         CmsSign.Result result = validate(decryptedText);
+
         Map<String,String> resultMap = CheckedCast.castToMapOf(String.class,String.class,
                 JsonUtils.json2map(new String(result.getContent())));
 

@@ -62,7 +62,18 @@ mvn clean package spring-boot:repackage
  1085  java -jar crypt-fetch-spring-0.0.1-SNAPSHOT.jar 
  1086  l
 
+# Security Considerations
 
+This PoC makes web security infrastructure mostly useless due to encryption of payload
+on application layer. A web application firewall is no longer able to check requests for malicious content.
+WAF may still check a long (pem encoded) string in request, but it cannot decode payload.
+
+On the other hand it is a great foundation for a powerful zero trust infrastructure on the
+authentication layer. Due to the signature of every request, it can be considered as
+authenticated. For a production deployment you should consider using a central PKI for
+throwaway certificates.
+
+Please be aware of that authorization of request is not in scope of this PoC.
 
 # Status
 
