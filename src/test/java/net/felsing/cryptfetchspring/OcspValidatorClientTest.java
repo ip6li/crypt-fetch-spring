@@ -1,7 +1,6 @@
 package net.felsing.cryptfetchspring;
 
 import net.felsing.cryptfetchspring.crypto.certs.CA;
-import net.felsing.cryptfetchspring.crypto.certs.Certificates;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Constants;

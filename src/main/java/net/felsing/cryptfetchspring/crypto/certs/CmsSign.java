@@ -29,8 +29,8 @@ import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.util.Store;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.io.*;
 import java.security.*;
 import java.security.cert.*;
@@ -40,7 +40,7 @@ import java.util.List;
 
 
 public final class CmsSign {
-    private static final Logger logger = LogManager.getLogger(CmsSign.class);
+    private static final Logger logger = LoggerFactory.getLogger(CmsSign.class);
 
     static {
         Security.addProvider(ProviderLoader.getProvider());

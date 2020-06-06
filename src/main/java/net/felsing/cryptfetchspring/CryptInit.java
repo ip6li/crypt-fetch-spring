@@ -8,9 +8,8 @@ import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
 import net.felsing.cryptfetchspring.crypto.util.URL;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -21,7 +20,7 @@ import java.security.cert.CertificateException;
 import java.util.Properties;
 
 public class CryptInit {
-    private static final Logger logger = LogManager.getLogger(CryptInit.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(CryptInit.class.getName());
 
     private static CA ca;
     private static ServerCertificate serverCertificate, serverSignerCertificate;
@@ -69,7 +68,9 @@ public class CryptInit {
 
         Constants.KeyType mode = Constants.KeyType.valueOf(properties.getProperty("keyMode"));
 
-        logger.info("generating new certificate: " + serverKeyStoreFile);
+        if (logger.isInfoEnabled()) {
+            logger.info("generating new certificate: " + serverKeyStoreFile);
+        }
 
         File f = new File(serverKeyStoreFile);
         if (f.exists()) {
@@ -110,7 +111,7 @@ public class CryptInit {
                 );
                 logger.info("Using existing certificate " + keyStoreFile);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.warn(e.getMessage());
             }
         } else {
             generateNewCertificate(cert, keyStoreFile, keyStorePassword);

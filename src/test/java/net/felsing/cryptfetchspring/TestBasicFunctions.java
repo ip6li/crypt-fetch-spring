@@ -6,8 +6,8 @@ import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -23,7 +23,7 @@ import java.util.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TestBasicFunctions {
-    private static final Logger logger = LogManager.getLogger(TestBasicFunctions.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestBasicFunctions.class);
 
     private static TestLib testLib;
     private static Configuration config;
@@ -35,7 +35,7 @@ class TestBasicFunctions {
             config = new Configuration();
         } catch (Exception e) {
             logger.error("BeforeAll failed");
-            logger.error(e);
+            logger.error(e.getMessage());
         }
     }
 
@@ -62,8 +62,10 @@ class TestBasicFunctions {
 
         String decryptedText = new String(bDecryptedText);
 
-        logger.info("[encrypt] plainText: " + plainText);
-        logger.info("[encrypt] decryptedText: " + decryptedText);
+        if (logger.isInfoEnabled()) {
+            logger.info("[encrypt] plainText: " + plainText);
+            logger.info("[encrypt] decryptedText: " + decryptedText);
+        }
 
         assert plainText.equals(decryptedText);
     }
@@ -98,7 +100,7 @@ class TestBasicFunctions {
 
     @Test
     void generateCsrWithSAN() throws Exception {
-        List<GeneralName> sanList = new LinkedList<>();
+        List<GeneralName> sanList = new ArrayList<>();
         // this SAN will be thrown away by signer
         sanList.add(new GeneralName(GeneralName.dNSName, "name.example.com"));
         Csr csr = new Csr();

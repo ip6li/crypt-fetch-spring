@@ -35,8 +35,8 @@ import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
 import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
@@ -53,7 +53,7 @@ import java.util.List;
 
 
 public final class Signer {
-    private static final Logger logger = LogManager.getLogger(Signer.class);
+    private static final Logger logger = LoggerFactory.getLogger(Signer.class);
 
     static {
         Security.addProvider(ProviderLoader.getProvider());
@@ -103,7 +103,7 @@ public final class Signer {
                     "RSA"
             );
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         }
 
         if (caPrivate == null) {
@@ -114,7 +114,6 @@ public final class Signer {
                 );
             } catch (Exception e) {
                 logger.error("Neither RSA nor EC key: " + e.getMessage());
-                e.printStackTrace();
             }
         }
 

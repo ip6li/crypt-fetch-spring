@@ -17,13 +17,13 @@
 
 package net.felsing.cryptfetchspring.crypto.config;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.util.Properties;
 
 
 public abstract class ConfigurationBase {
-    private static final Logger logger = LogManager.getLogger(ConfigurationBase.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConfigurationBase.class);
 
     protected static final Properties config = new Properties();
 
@@ -57,8 +57,9 @@ public abstract class ConfigurationBase {
         } else {
             sb.append("==> ").append(key).append(" set to ").append(value);
         }
-        logger.info(sb.toString());
-
+        if (logger.isInfoEnabled()) {
+            logger.info(sb.toString());
+        }
         return value;
     }
 
@@ -71,13 +72,16 @@ public abstract class ConfigurationBase {
             config.setProperty("bc", Configuration.BC_TYPE.bc.toString());
         }
 
-        config.setProperty("js.fips",
-                Boolean.toString(
-                        config.getProperty("bc").matches(
-                                Configuration.BC_TYPE.bcfips.toString()
-                        )
-                )
-        );
+        String isFips = config.getProperty("bc");
+        if (isFips!=null) {
+            config.setProperty("js.fips",
+                    Boolean.toString(
+                            isFips.matches(
+                                    Configuration.BC_TYPE.bcfips.toString()
+                            )
+                    )
+            );
+        }
 
         config.setProperty(Constants.p_serverKeystoreFile,
                 readFromVMoptions(

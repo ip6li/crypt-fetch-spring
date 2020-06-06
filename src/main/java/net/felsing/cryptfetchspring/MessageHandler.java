@@ -3,8 +3,8 @@ package net.felsing.cryptfetchspring;
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -17,7 +17,7 @@ import java.util.List;
 
 
 public class MessageHandler {
-    private static final Logger logger = LogManager.getLogger(MessageHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
 
     private final KeyPair serverKeyPair;
     private final X509Certificate serverCert;
@@ -53,7 +53,7 @@ public class MessageHandler {
             jsonResponse = JsonUtils.map2json(callback.doPayload(plainTextAndValidatedReq));
         } catch (Exception e) {
             jsonResponse = JsonUtils.map2json(JsonUtils.genError("Cannot process payload"));
-            logger.error(e);
+            logger.error(e.getMessage());
         }
 
         CMSSignedData cmsSignedResp = cmsSign.signCmsEnveloped(serverKeyPair, serverCert, jsonResponse.getBytes());

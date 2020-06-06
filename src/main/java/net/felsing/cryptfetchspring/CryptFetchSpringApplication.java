@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.login.Login;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +22,7 @@ import java.util.Map;
 @SpringBootApplication
 @RestController
 public class CryptFetchSpringApplication implements ServletContextAware {
-    private static final Logger logger = LogManager.getLogger(CryptFetchSpringApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(CryptFetchSpringApplication.class);
 
     private static ServerConfig serverConfig;
     private ServletContext servletContext;
@@ -37,11 +37,13 @@ public class CryptFetchSpringApplication implements ServletContextAware {
     public void addInitHooks() {
         try {
             String absolutePath = servletContext.getRealPath("resources");
-            logger.info("[addInitHooks] absolutePath: " + absolutePath);
+            if (logger.isInfoEnabled()) {
+                logger.info("[addInitHooks] absolutePath: " + absolutePath);
+            }
             CA ca = CryptInit.getInstance("./");
             serverConfig = ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         }
     }
 
@@ -60,7 +62,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         try {
             return login.login(request);
         } catch (Exception e) {
-            logger.warn(e);
+            logger.warn(e.getMessage());
             HashMap<String, String> result = new HashMap<>();
             result.put("error", "Login failed");
             return result;
@@ -78,7 +80,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         try {
             return messageHandler.doRequest(request, PayloadRenew.getInstance());
         } catch (Exception e) {
-            logger.warn(e);
+            logger.warn(e.getMessage());
         }
 
         String returnValue;
@@ -102,7 +104,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         try {
             return messageHandler.doRequest(request, PayloadMessage.getInstance());
         } catch (Exception e) {
-            logger.warn(e);
+            logger.warn(e.getMessage());
         }
 
         String returnValue;

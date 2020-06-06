@@ -6,9 +6,12 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Enumeration;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 
 public final class KeyStoreUtils {
+    private static final Logger logger = LoggerFactory.getLogger(KeyStoreUtils.class);
     private enum KS_MODE {keypair, certificate}
 
     public static KeyStore loadKeystore(String keystoreFile, String keystorePassword) throws
@@ -84,7 +87,7 @@ public final class KeyStoreUtils {
                             new PKCS8EncodedKeySpec(key.getEncoded())
                     );
                 } catch (Exception ivEcKey) {
-                    ivEcKey.printStackTrace();
+                    logger.warn(ivEcKey.getMessage());
                     throw new UnrecoverableKeyException("Certificate is neither RSA nor EC");
                 }
             }

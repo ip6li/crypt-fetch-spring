@@ -10,7 +10,7 @@
     </parent>
     <groupId>net.felsing</groupId>
     <artifactId>crypt-fetch-spring</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
     <name>crypt-fetch-spring</name>
     <description>Crypt Fetch for Spring Boot</description>
 

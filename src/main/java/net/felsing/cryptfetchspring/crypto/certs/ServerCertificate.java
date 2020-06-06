@@ -20,6 +20,8 @@ package net.felsing.cryptfetchspring.crypto.certs;
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateEncodingException;
@@ -28,7 +30,7 @@ import java.security.cert.X509Certificate;
 
 
 public final class ServerCertificate {
-
+    private static final Logger logger = LoggerFactory.getLogger(ServerCertificate.class);
     private KeyPair keyPair;
     private X509Certificate serverCertificate;
 
@@ -81,7 +83,7 @@ public final class ServerCertificate {
 
             serverCertificate = PemUtils.getCertificateFromPem (signedCertificate);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn(e.getMessage());
         }
     }
 

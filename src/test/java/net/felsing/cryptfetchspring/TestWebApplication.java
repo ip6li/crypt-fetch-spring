@@ -5,8 +5,8 @@ import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,7 +26,7 @@ import java.util.Map;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = CryptFetchSpringApplication.class)
 class TestWebApplication {
-    private static final Logger logger = LogManager.getLogger(TestWebApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestWebApplication.class);
 
     private static TestLib testLib;
     private static String config=null;
@@ -74,7 +74,7 @@ class TestWebApplication {
             testLib = TestLib.getInstance();
         } catch (Exception e) {
             logger.error("BeforeAll failed");
-            logger.error(e);
+            logger.error(e.getMessage());
         }
     }
 

@@ -32,19 +32,17 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.*;
-import java.security.cert.Certificate;
 import java.util.*;
 
 
 public final class Certificates {
-    private static final Logger logger = LogManager.getLogger(Certificates.class);
+    private static final Logger logger = LoggerFactory.getLogger(Certificates.class);
 
 
     private int validForDays = 365;
@@ -233,7 +231,7 @@ public final class Certificates {
         } catch (NullPointerException ne) {
             return null;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn(e.getMessage());
         }
         return identities;
     }

@@ -4,16 +4,18 @@ import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+
+import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 
 public class PayloadRenew implements PayloadIntf {
-    private static final Logger logger = LogManager.getLogger(PayloadRenew.class);
+    private static final Logger logger = LoggerFactory.getLogger(PayloadRenew.class);
 
     private final CA ca;
     private final Configuration config;
@@ -36,7 +38,7 @@ public class PayloadRenew implements PayloadIntf {
             throws Exception {
         long errNoCounter = 100000; // create unique error numbers on each step
 
-        String pkcs10ReqPEM = new String(plainTextContent.getContent());
+        String pkcs10ReqPEM = new String(plainTextContent.getContent(), StandardCharsets.UTF_8);
         PKCS10CertificationRequest pkcs10Req = PemUtils.convertPemToPKCS10CertificationRequest(pkcs10ReqPEM);
 
         errNoCounter++;

@@ -6,25 +6,27 @@ import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
 
 public class TestLib {
-    private static final Logger logger = LogManager.getLogger(TestLib.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestLib.class);
 
     private static CA ca;
     private static TestLib testLib;
-    private Configuration config;
+    private final Configuration config;
 
 
     private TestLib() throws Exception {
+        logger.debug("TestLib initialized");
         ca = CryptInit.getInstance("./");
         ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
         config = new Configuration();
     }
+
 
     public static TestLib getInstance() throws Exception {
 

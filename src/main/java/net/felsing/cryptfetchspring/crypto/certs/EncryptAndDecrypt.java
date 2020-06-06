@@ -21,6 +21,7 @@ package net.felsing.cryptfetchspring.crypto.certs;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+import net.felsing.cryptfetchspring.crypto.util.Random;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -30,9 +31,8 @@ import org.bouncycastle.cms.bc.BcCMSContentEncryptorBuilder;
 import org.bouncycastle.cms.jcajce.*;
 import org.bouncycastle.operator.OutputEncryptor;
 import org.bouncycastle.operator.jcajce.JcaAlgorithmParametersConverter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 import java.io.*;
@@ -46,7 +46,7 @@ import java.util.Iterator;
 
 
 public final class EncryptAndDecrypt {
-    private static final Logger logger = LogManager.getLogger(EncryptAndDecrypt.class);
+    private static final Logger logger = LoggerFactory.getLogger(EncryptAndDecrypt.class);
 
     private static final String mdName = "SHA-512";
     private static final String mdgName = "MGF1";
@@ -164,8 +164,9 @@ public final class EncryptAndDecrypt {
                 )
         );
 
-        logger.debug("encrypt: " + cert.getSigAlgName());
-
+        if (logger.isDebugEnabled()) {
+            logger.debug("encrypt: " + cert.getSigAlgName());
+        }
         ASN1ObjectIdentifier cmsAlgorithm;
         cmsAlgorithm = CMSAlgorithm.AES256_CBC; // AES256_GCM does not work with PKI.js
         OutputEncryptor encryptor = new JceCMSContentEncryptorBuilder(
@@ -179,7 +180,7 @@ public final class EncryptAndDecrypt {
 
 
     private void addUKM(JceKeyAgreeRecipientInfoGenerator rig) {
-        SecureRandom random = new SecureRandom();
+        SecureRandom random = Random.getSecureRandom();
 
         byte[] ukm = new byte[64];
         random.nextBytes(ukm);
@@ -189,6 +190,7 @@ public final class EncryptAndDecrypt {
 
     private void setOriginatorInfo(CMSEnvelopedDataGenerator gen, X509Certificate cert)
             throws CertificateEncodingException, IOException {
+        assert (cert!=null);
         X509CertificateHolder origCert = new X509CertificateHolder(
                 cert.getEncoded()
         );
@@ -200,7 +202,7 @@ public final class EncryptAndDecrypt {
             throws CMSException, IOException, CertificateException {
 
         CMSEnvelopedDataGenerator gen = new CMSEnvelopedDataGenerator();
-
+        assert (certSender!=null);
         JceKeyAgreeRecipientInfoGenerator rig = new JceKeyAgreeRecipientInfoGenerator(
                 CMSAlgorithm.ECDH_SHA512KDF,
                 privateKeySender,

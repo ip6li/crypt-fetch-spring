@@ -2,8 +2,8 @@ package net.felsing.cryptfetchspring.crypto.util;
 
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.openssl.PEMParser;
@@ -24,7 +24,7 @@ import java.security.cert.*;
  * from and to Java classes
  ***************************************************************************************************************/
 public final class PemUtils {
-    private static final Logger logger = LogManager.getLogger(PemUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(PemUtils.class);
 
     /**
      * Utilities to encode different X.509/Key objects to PEM
@@ -36,7 +36,9 @@ public final class PemUtils {
             throws ArrayIndexOutOfBoundsException, NullPointerException {
         String begin = "-----BEGIN.*?-----";
         String end = "-----END.*-----";
-        String data = new String(pem)
+
+        // deepcode ignore ReplaceBoxedConstructor~java.lang.String: valueOf does not work here
+        String data = new String(pem, StandardCharsets.UTF_8)
                 .replaceFirst(begin, "")
                 .replaceFirst(end, "")
                 .replaceAll("\\s", "");

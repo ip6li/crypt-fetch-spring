@@ -20,9 +20,8 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
 import org.bouncycastle.cert.ocsp.BasicOCSPResp;
 import org.bouncycastle.cert.ocsp.CertificateStatus;
@@ -38,7 +37,7 @@ import io.netty.handler.ssl.OpenSsl;
  */
 @SuppressWarnings("unused")
 public class OcspValidatorClient {
-    private static final Logger logger = LogManager.getLogger(OcspValidatorClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(OcspValidatorClient.class);
 
     private OcspValidatorClient() {}
 
@@ -55,7 +54,9 @@ public class OcspValidatorClient {
         //URI uri = OcspUtils.ocspUri(certificate);
         URI uri = OcspUtils.ocspUri(issuer);
 
-        logger.info("OCSP Responder URI: " + uri);
+        if (logger.isInfoEnabled()) {
+            logger.info("OCSP Responder URI: " + uri);
+        }
 
         if (uri == null) {
             throw new IllegalStateException("The CA/certificate doesn't have an OCSP responder");

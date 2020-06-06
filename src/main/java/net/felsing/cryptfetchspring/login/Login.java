@@ -8,8 +8,8 @@ import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.operator.OperatorCreationException;
 import java.io.IOException;
@@ -25,7 +25,7 @@ import java.util.Map;
 
 
 public class Login implements loginIntf {
-    private static final Logger logger = LogManager.getLogger(Login.class);
+    private static final Logger logger = LoggerFactory.getLogger(Login.class);
 
     private final Configuration config;
 
@@ -65,7 +65,7 @@ public class Login implements loginIntf {
             return execLogin(credentials);
 
         } catch (IOException | CMSException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
             result.put("authenticated", sFalse);
         }
         return result;

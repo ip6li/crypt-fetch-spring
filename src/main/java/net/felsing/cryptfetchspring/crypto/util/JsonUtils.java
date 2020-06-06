@@ -3,16 +3,15 @@ package net.felsing.cryptfetchspring.crypto.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public final class JsonUtils {
-    private static final Logger logger = LogManager.getLogger(JsonUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 
     private JsonUtils () { }
 
@@ -36,7 +35,7 @@ public final class JsonUtils {
         try {
             return map2json(genError(msg));
         } catch (JsonProcessingException e) {
-            logger.warn(e);
+            logger.warn(e.getMessage());
             return null;
         }
     }

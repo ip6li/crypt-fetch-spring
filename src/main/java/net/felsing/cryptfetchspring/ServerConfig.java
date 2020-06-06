@@ -5,8 +5,8 @@ import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -23,7 +23,7 @@ import java.util.Map;
  * Handles configuration items needed by service consumers
  *************************************************************************************************************/
 public class ServerConfig {
-    private static final Logger logger = LogManager.getLogger(ServerConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServerConfig.class);
 
     private final ServerCertificate serverCertificate;
     private final ServerCertificate signerCertificate;
@@ -62,7 +62,7 @@ public class ServerConfig {
         try {
             target.put(Constants.serverCert, serverCertificate.getServerCertificatePEM());
         } catch (CertificateEncodingException | IOException e) {
-            logger.warn(e);
+            logger.warn(e.getMessage());
         }
     }
 
@@ -108,21 +108,23 @@ public class ServerConfig {
 
 
     private void putConfigJson () {
-        try {
-            File fileLocation = findConfigJson();
-            if (fileLocation==null) {
-                logger.info("config.json not found");
-            }
-            assert fileLocation != null;
+        File fileLocation = findConfigJson();
+        if (fileLocation==null) {
+            logger.info("config.json not found");
+        }
+        assert fileLocation != null;
+        try (FileInputStream jsonConfigFile = new FileInputStream(fileLocation.getAbsoluteFile())) {
             ObjectMapper objectMapper = new ObjectMapper();
-            Map<?, ?> map = objectMapper.readValue(new FileInputStream(fileLocation.getAbsoluteFile()), Map.class);
-            logger.info("config.json found at " + fileLocation.getAbsolutePath());
+            Map<?, ?> map = objectMapper.readValue(jsonConfigFile, Map.class);
+            if (logger.isInfoEnabled()) {
+                logger.info("config.json found at " + fileLocation.getAbsolutePath());
+            }
             Map<?, ?> root = (Map<?, ?>) map.get("config");
             Map<? ,?> certs = (Map<?, ?>) root.get("remotekeystore");
             putCerts(CheckedCast.castToMapOf(String.class, String.class, certs));
             configuration.put("config", root);
         } catch (IOException e) {
-            logger.error(e);
+            logger.error(e.getMessage());
         }
     }
 

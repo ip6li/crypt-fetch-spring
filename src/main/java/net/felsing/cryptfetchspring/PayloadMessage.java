@@ -1,14 +1,15 @@
 package net.felsing.cryptfetchspring;
 
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class PayloadMessage implements PayloadIntf {
-    private static final Logger logger = LogManager.getLogger(MessageHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
 
     private PayloadMessage () {}
 
@@ -19,7 +20,7 @@ public class PayloadMessage implements PayloadIntf {
 
     @Override
     public Map<String,String> doPayload (CmsSign.Result plainTextContent) {
-        logger.info("[doPayload] request: {}", new String(plainTextContent.getContent()));
+        logger.info("[doPayload] request: {}", new String(plainTextContent.getContent(),StandardCharsets.UTF_8));
         HashMap<String,String> plainTextResponse = new HashMap<>();
         plainTextResponse.put("foo", "bar äöüÄÖÜß€");
         return plainTextResponse;

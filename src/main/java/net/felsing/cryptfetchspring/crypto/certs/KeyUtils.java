@@ -3,7 +3,6 @@ package net.felsing.cryptfetchspring.crypto.certs;
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
-
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 
