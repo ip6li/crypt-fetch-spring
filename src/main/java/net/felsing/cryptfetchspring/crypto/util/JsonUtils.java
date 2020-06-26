@@ -15,7 +15,7 @@ public final class JsonUtils {
 
     private JsonUtils () { }
 
-    public static HashMap<?,?> json2map (String json) throws JsonProcessingException {
+    public static Map<?,?> json2map (String json) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(json, new TypeReference<>(){});
     }
@@ -25,7 +25,7 @@ public final class JsonUtils {
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);
     }
 
-    public static HashMap<String, String> genError (String msg) {
+    public static Map<String, String> genError (String msg) {
         HashMap<String,String> errMsg = new HashMap<>();
         errMsg.put("error", msg);
         return errMsg;

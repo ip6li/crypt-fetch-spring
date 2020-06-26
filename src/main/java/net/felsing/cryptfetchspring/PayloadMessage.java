@@ -9,7 +9,7 @@ import java.util.Map;
 
 
 public class PayloadMessage implements PayloadIntf {
-    private static final Logger logger = LoggerFactory.getLogger(MessageHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(PayloadMessage.class);
 
     private PayloadMessage () {}
 
@@ -20,7 +20,10 @@ public class PayloadMessage implements PayloadIntf {
 
     @Override
     public Map<String,String> doPayload (CmsSign.Result plainTextContent) {
-        logger.info("[doPayload] request: {}", new String(plainTextContent.getContent(),StandardCharsets.UTF_8));
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("[doPayload] request: %s",
+                    new String(plainTextContent.getContent(), StandardCharsets.UTF_8)));
+        }
         HashMap<String,String> plainTextResponse = new HashMap<>();
         plainTextResponse.put("foo", "bar äöüÄÖÜß€");
         return plainTextResponse;

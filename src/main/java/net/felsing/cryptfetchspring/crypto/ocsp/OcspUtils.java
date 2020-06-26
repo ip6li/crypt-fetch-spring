@@ -18,28 +18,35 @@ package net.felsing.cryptfetchspring.crypto.ocsp;
 
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.HttpsURLConnection;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import com.google.common.net.MediaType;
+import com.mastfrog.netty.http.client.HttpClient;
+import com.mastfrog.netty.http.client.ResponseFuture;
+import com.mastfrog.netty.http.client.ResponseHandler;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.cert.ocsp.OCSPReq;
 import org.bouncycastle.cert.ocsp.OCSPResp;
 
+import static java.net.HttpURLConnection.HTTP_OK;
+
 
 @SuppressWarnings("unused")
 public final class OcspUtils {
+    private static final Logger logger = LoggerFactory.getLogger(OcspUtils.class);
+
     /**
      * The OID for OCSP responder URLs.
      * <p>
      * http://www.alvestrand.no/objectid/1.3.6.1.5.5.7.48.1.html
      */
-    //private static final ASN1ObjectIdentifier OCSP_RESPONDER_OID
-    //        = new ASN1ObjectIdentifier("1.3.6.1.5.5.7.48.1").intern();
     private static final ASN1ObjectIdentifier OCSP_RESPONDER_OID
             = AccessDescription.id_ad_ocsp.intern();
 
@@ -106,12 +113,38 @@ public final class OcspUtils {
         return null;
     }
 
+    public static OCSPResp request2 (URI uri, OCSPReq request, long timeout, TimeUnit unit)
+            throws InterruptedException, IOException {
+        final OCSPResp[] ocspResponse = { null };
+        HttpClient client = HttpClient.builder().followRedirects().build();
+        ResponseFuture h = client.post()
+                .setURL (String.valueOf(uri))
+                .setHost(uri.getHost())
+                .setTimeout(Duration.ofMillis(unit.toMillis(timeout)))
+                .setBody(request, MediaType.create("application", "ocsp-request"))
+		.execute (new ResponseHandler<>(String.class) {
+
+		    @Override
+            protected void receive(HttpResponseStatus status, HttpHeaders headers, String response) {
+                try {
+                    ocspResponse[0] = new OCSPResp(response.getBytes());
+                } catch (IOException ioe) {
+                    logger.warn(ioe.getMessage());
+                }
+            }
+        });
+
+        h.await();
+        return ocspResponse[0];
+    }
+
     /**
      * TODO: This is a very crude and non-scalable HTTP client to fetch the OCSP response from the
      * CA's OCSP responder server. It's meant to demonstrate the basic building blocks on how to
      * interact with the responder server and you should consider using Netty's HTTP client instead.
      */
-    public static OCSPResp request(URI uri, OCSPReq request, long timeout, TimeUnit unit) throws IOException {
+    public static OCSPResp request(URI uri, OCSPReq request, long timeout, TimeUnit unit)
+            throws IOException {
         byte[] encoded = request.getEncoded();
 
         URL url = uri.toURL();
@@ -133,7 +166,7 @@ public final class OcspUtils {
 
                 try (InputStream in = connection.getInputStream()) {
                     int code = connection.getResponseCode();
-                    if (code != HttpsURLConnection.HTTP_OK) {
+                    if (code != HTTP_OK) {
                         throw new IOException("Unexpected status-code=" + code);
                     }
 

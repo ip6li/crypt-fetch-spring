@@ -5,6 +5,8 @@ import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+
+import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +35,7 @@ public class PayloadRenew implements PayloadIntf {
 
     @Override
     public Map<String,String> doPayload (CmsSign.Result plainTextContent)
-            throws Exception {
+            throws IOException {
         long errNoCounter = 100000; // create unique error numbers on each step
 
         PKCS10CertificationRequest pkcs10Req = PemUtils.convertPemToPKCS10CertificationRequest(plainTextContent.getContent());
@@ -62,8 +64,8 @@ public class PayloadRenew implements PayloadIntf {
                     ca.getCaCertificatePEM()
             );
         } catch (Exception e) {
-            logger.warn("renew failed: {} ({})", errNoCounter, e);
-            return JsonUtils.genError("renew failed: " + errNoCounter);
+            logger.warn(String.format("renew failed: %s (%s)", errNoCounter, e));
+            return JsonUtils.genError(String.format("renew failed: %d", errNoCounter));
         }
 
         HashMap<String, String> renewResult = new HashMap<>();

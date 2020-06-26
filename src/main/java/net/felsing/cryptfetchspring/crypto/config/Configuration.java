@@ -29,9 +29,9 @@ package net.felsing.cryptfetchspring.crypto.config;
 
 public final class Configuration extends ConfigurationBase {
 
-    public enum BC_TYPE {bc, bcfips}
+    public enum BC_TYPE {BC, BCFIPS}
 
-    private final static boolean useEC = Boolean.parseBoolean(readFromVMoptions("ec", "false"));
+    private static final boolean USE_EC = Boolean.parseBoolean(readFromVMoptions("ec", "false"));
 
 
     @Override
@@ -42,13 +42,13 @@ public final class Configuration extends ConfigurationBase {
         config.setProperty("keyStorePassword", "changeit");
         config.setProperty("ca.dnSuffix", "O=Honest Achmed,OU=Used Cars,C=DE");
         config.setProperty("ca.dnPrefix", "CN=Honest Achmets trustworthy CA");
-        config.setProperty("ca.days", Long.toString(30 * 365));
+        config.setProperty("ca.days", Long.toString(30L * 365L));
         config.setProperty("server.days", Integer.toString(10 * 365));
         config.setProperty("signer.days", Integer.toString(10 * 365));
         config.setProperty("certificate.days", Integer.toString(1));
 
         // use either RSA or ECDSA
-        if (useEC) {
+        if (USE_EC) {
             config.setProperty("js.sign", "ECDSA");
             config.setProperty("keyMode", Constants.KeyType.EC.toString());
             config.setProperty("server.DN", "CN=The server certificate ECDSA");

@@ -9,6 +9,8 @@ import java.security.spec.ECGenParameterSpec;
 
 public final class KeyUtils {
 
+    private KeyUtils () {}
+
     public static KeyPair generateKeypairRSA(int size, String algorithm)
             throws NoSuchProviderException, NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(algorithm, ProviderLoader.getProviderName());

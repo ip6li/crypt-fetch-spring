@@ -166,7 +166,7 @@ class TestBasicFunctions {
 
     @Test
     public void testDefaultConfig() throws JsonProcessingException {
-        HashMap<String, Object> configMap = ServerConfig.createDefaultConfig();
+        Map<String, Object> configMap = ServerConfig.createDefaultConfig();
         String configJson = JsonUtils.map2json(configMap);
         assert configJson.length() > 0;
     }

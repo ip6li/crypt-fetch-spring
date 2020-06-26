@@ -23,8 +23,8 @@ public final class Constants {
     public enum KeyType { RSA, EC }
 
     // attribute ids
-    public static final String SHA256withECDSA = "SHA256withECDSA";
-    public static final String SHA256withRSA = "SHA256withRSA";
+    public static final String SHA_256_WITH_ECDSA = "SHA256withECDSA";
+    public static final String SHA_256_WITH_RSA = "SHA256withRSA";
 
     // PEM tags
     public static final String CMS_BEGIN = "-----BEGIN CMS-----";

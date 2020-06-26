@@ -16,18 +16,19 @@
 
 package net.felsing.cryptfetchspring.crypto.ocsp;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
+
+import org.bouncycastle.cert.ocsp.*;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.bouncycastle.asn1.ocsp.OCSPResponseStatus;
-import org.bouncycastle.cert.ocsp.BasicOCSPResp;
-import org.bouncycastle.cert.ocsp.CertificateStatus;
-import org.bouncycastle.cert.ocsp.OCSPReq;
-import org.bouncycastle.cert.ocsp.OCSPResp;
-import org.bouncycastle.cert.ocsp.SingleResp;
 import io.netty.handler.ssl.OpenSsl;
 
 
@@ -47,15 +48,24 @@ public class OcspValidatorClient {
     }
 
 
-    public void validate(X509Certificate certificate, X509Certificate issuer) throws Exception {
+    public void validate(X509Certificate certificate, X509Certificate issuer)
+            throws OperatorCreationException, IOException, CertificateEncodingException,
+            OCSPException, URISyntaxException {
 
         // Step 2: We need the URL of the CA's OCSP responder server. It's somewhere encoded
         // into the certificate! Notice that it's an HTTP URL.
-        //URI uri = OcspUtils.ocspUri(certificate);
-        URI uri = OcspUtils.ocspUri(issuer);
+        URI uri = null;
+        try {
+            uri = OcspUtils.ocspUri(certificate);
+        } catch (IOException e) {
+            // do nothing
+        }
+        if (uri==null) {
+            uri = OcspUtils.ocspUri(issuer);
+        }
 
         if (logger.isInfoEnabled()) {
-            logger.info("OCSP Responder URI: " + uri);
+            logger.info(String.format("OCSP Responder URI: %s", uri));
         }
 
         if (uri == null) {
@@ -79,9 +89,11 @@ public class OcspValidatorClient {
         SingleResp first = basicResponse.getResponses()[0];
 
         CertificateStatus status = first.getCertStatus();
-        logger.info("Status: " + (status == CertificateStatus.GOOD ? "Good" : status));
-        logger.info("This Update: " + first.getThisUpdate());
-        logger.info("Next Update: " + first.getNextUpdate());
+        if (logger.isInfoEnabled()) {
+            logger.info(String.format("Status: %s", (status == CertificateStatus.GOOD ? "Good" : status)));
+            logger.info(String.format("This Update: %s", first.getThisUpdate()));
+            logger.info(String.format("Next Update: %s", first.getNextUpdate()));
+        }
 
         if (status != null) {
             throw new IllegalStateException("certificate-status=" + status);

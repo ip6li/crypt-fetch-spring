@@ -73,8 +73,7 @@ public final class Certificates {
 
 
     private void setExtendedUsage(X509v3CertificateBuilder certificate) throws IOException {
-        if (extendedKeyUsages.size() > 0) {
-
+        if (!extendedKeyUsages.isEmpty()) {
             KeyPurposeId[] keyPurposeIds = new KeyPurposeId[extendedKeyUsages.size()];
             extendedKeyUsages.toArray(keyPurposeIds);
             ExtendedKeyUsage usageEx = new ExtendedKeyUsage(keyPurposeIds);
@@ -108,7 +107,7 @@ public final class Certificates {
         Provider bcProvider = ProviderLoader.getProvider();
         Security.addProvider(bcProvider);
 
-        KeyPair keyPair = KeyUtils.generateKeypair(Constants.KeyType.RSA, keyLength);
+        KeyPair tmpKeyPair = KeyUtils.generateKeypair(Constants.KeyType.RSA, keyLength);
 
         Date startDate = new Date();
         Date endDate = calcValid(validForDays);
@@ -119,12 +118,12 @@ public final class Certificates {
         secureRandom.nextBytes(id);
         BigInteger serial = new BigInteger(160, secureRandom);
 
-        String signatureAlgorithm = "SHA256With" + keyPair.getPrivate().getAlgorithm();
+        String signatureAlgorithm = "SHA256With" + tmpKeyPair.getPrivate().getAlgorithm();
 
-        ContentSigner contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).build(keyPair.getPrivate());
+        ContentSigner contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).build(tmpKeyPair.getPrivate());
 
         JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(
-                dnName, serial, startDate, endDate, dnName, keyPair.getPublic()
+                dnName, serial, startDate, endDate, dnName, tmpKeyPair.getPublic()
         );
 
         BasicConstraints basicConstraints = new BasicConstraints(true); // <-- true for CA, false for EndEntity
@@ -138,7 +137,7 @@ public final class Certificates {
 
         X509Certificate serverCertificate = new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
 
-        this.keyPair = keyPair;
+        this.keyPair = tmpKeyPair;
         this.x509Certificate = serverCertificate;
     }
 
@@ -204,6 +203,29 @@ public final class Certificates {
     }
 
 
+    private static void addIdentity (List<String> identities, ASN1InputStream decoder)
+            throws IOException {
+        ASN1Primitive encoded = decoder.readObject();
+        String identity = ((DERUTF8String) encoded).getString();
+        identities.add(identity);
+    }
+
+
+    private static void decodeSubjectAltName (List<?> item, List<String> identities) {
+        ASN1InputStream decoder = null;
+        try {
+            if (item.toArray()[1] instanceof byte[])
+                decoder = new ASN1InputStream((byte[]) item.toArray()[1]);
+            else if (item.toArray()[1] instanceof String)
+                identities.add((String) item.toArray()[1]);
+            if (decoder == null) return;
+            addIdentity(identities, decoder);
+        } catch (Exception e) {
+            logger.error("Error decoding subjectAltName {}", e.getLocalizedMessage(), e);
+        }
+    }
+
+
     public static List<String> getSubjectAlternativeNames(X509Certificate x509Certificate) {
         List<String> identities = new ArrayList<>();
         try {
@@ -211,25 +233,13 @@ public final class Certificates {
             for (List<?> item : altNames) {
                 Integer type = (Integer) item.get(0);
                 if (Arrays.stream(Constants.allowedSanTypes).anyMatch(type::equals)) {
-                    try {
-                        ASN1InputStream decoder = null;
-                        if (item.toArray()[1] instanceof byte[])
-                            decoder = new ASN1InputStream((byte[]) item.toArray()[1]);
-                        else if (item.toArray()[1] instanceof String)
-                            identities.add((String) item.toArray()[1]);
-                        if (decoder == null) continue;
-                        ASN1Primitive encoded = decoder.readObject();
-                        String identity = ((DERUTF8String) encoded).getString();
-                        identities.add(identity);
-                    } catch (Exception e) {
-                        logger.error("Error decoding subjectAltName" + e.getLocalizedMessage(), e);
-                    }
+                    decodeSubjectAltName(item, identities);
                 } else {
-                    logger.warn("Unknown SAN type: " + type);
+                    logger.warn("Unknown SAN type: {}", type);
                 }
             }
         } catch (NullPointerException ne) {
-            return null;
+            // do nothing
         } catch (Exception e) {
             logger.warn(e.getMessage());
         }

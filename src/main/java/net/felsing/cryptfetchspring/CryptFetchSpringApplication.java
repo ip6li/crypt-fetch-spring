@@ -8,10 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.ServletContextAware;
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
@@ -24,6 +21,8 @@ import java.util.Map;
 public class CryptFetchSpringApplication implements ServletContextAware {
     private static final Logger logger = LoggerFactory.getLogger(CryptFetchSpringApplication.class);
 
+    private static final String ERROR = "error";
+
     private static ServerConfig serverConfig;
     private ServletContext servletContext;
 
@@ -33,29 +32,38 @@ public class CryptFetchSpringApplication implements ServletContextAware {
     }
 
 
+    private static void setServerConfig (CA ca) {
+        serverConfig = ServerConfig.getInstance(
+                ca,
+                CryptInit.getServerCertificate(),
+                CryptInit.getSignerCertificate()
+        );
+    }
+
+
     @PostConstruct
     public void addInitHooks() {
         try {
             String absolutePath = servletContext.getRealPath("resources");
             if (logger.isInfoEnabled()) {
-                logger.info("[addInitHooks] absolutePath: " + absolutePath);
+                logger.info(String.format("[addInitHooks] absolutePath: %s", absolutePath));
             }
             CA ca = CryptInit.getInstance("./");
-            serverConfig = ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
+            setServerConfig(ca);
         } catch (Exception e) {
             logger.error(e.getMessage());
         }
     }
 
 
-    @RequestMapping(value = "/config", method = RequestMethod.GET)
+    @GetMapping(value = "/config")
     public Map<String, ?> getConfig() {
         // Deliver server/ca certificate and urls for further operations
         return serverConfig.getConfig();
     }
 
 
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    @PostMapping(value = "/login")
     public Map<String, String> login(@RequestBody String request) {
         // getCSR, verify credentials, if ok: sign CSR and return client certificate
         Login login = new Login();
@@ -64,13 +72,13 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         } catch (Exception e) {
             logger.warn(e.getMessage());
             HashMap<String, String> result = new HashMap<>();
-            result.put("error", "Login failed");
+            result.put(ERROR, "Login failed");
             return result;
         }
     }
 
 
-    @RequestMapping(value = "/renew", method = RequestMethod.POST)
+    @PostMapping(value = "/renew")
     public String renew(@RequestBody String request) {
         MessageHandler messageHandler = MessageHandler.getInstance(
                 CryptInit.getServerCertificate().getServerKeyPair(),
@@ -85,15 +93,15 @@ public class CryptFetchSpringApplication implements ServletContextAware {
 
         String returnValue;
         try {
-            returnValue = JsonUtils.map2json((Map<?, ?>) new HashMap<>().put("error", "renew failed"));
+            returnValue = JsonUtils.map2json((Map<?, ?>) new HashMap<>().put(ERROR, "renew failed"));
         } catch (JsonProcessingException e) {
-            returnValue = "error";
+            returnValue = ERROR;
         }
         return returnValue;
     }
 
 
-    @RequestMapping(value = "/message", method = RequestMethod.POST)
+    @PostMapping(value = "/message")
     public String message(@RequestBody String request) {
         // Get encrypted request und put encrypted response
         MessageHandler messageHandler = MessageHandler.getInstance(
@@ -109,15 +117,15 @@ public class CryptFetchSpringApplication implements ServletContextAware {
 
         String returnValue;
         try {
-            returnValue = JsonUtils.map2json((Map<?, ?>) new HashMap<>().put("error", "message failed"));
+            returnValue = JsonUtils.map2json((Map<?, ?>) new HashMap<>().put(ERROR, "message failed"));
         } catch (JsonProcessingException e) {
-            returnValue = "error";
+            returnValue = ERROR;
         }
         return returnValue;
     }
 
 
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    @GetMapping(value = "/")
     public String getRoot() {
         //ToDo: Provide default communications
         return "getRoot()";

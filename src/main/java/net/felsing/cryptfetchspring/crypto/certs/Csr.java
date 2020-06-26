@@ -22,13 +22,17 @@ import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.asn1.x509.*;
 import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import javax.security.auth.x500.X500Principal;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.cert.CertificateEncodingException;
 import java.util.List;
 
@@ -36,7 +40,7 @@ import java.util.List;
 public final class Csr {
 
     private KeyPair keyPair;
-    private PKCS10CertificationRequest csr;
+    private PKCS10CertificationRequest pkcs10CertificationRequest;
 
 
     /**
@@ -47,7 +51,9 @@ public final class Csr {
      *                          EC: should be >= 256 for EC
      * @param dn :          DN
      */
-    public void createCsr(Constants.KeyType keyType, int size, String dn, List<GeneralName> sanList) throws Exception {
+    public void createCsr(Constants.KeyType keyType, int size, String dn, List<GeneralName> sanList)
+            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException,
+            IOException, OperatorCreationException {
 
         keyPair = KeyUtils.generateKeypair(keyType, size);
 
@@ -63,17 +69,20 @@ public final class Csr {
             setSubjectAltNames(p10Builder, sanList);
         }
         ContentSigner contentSigner = csBuilder.build(keyPair.getPrivate());
-        csr = p10Builder.build(contentSigner);
+        pkcs10CertificationRequest = p10Builder.build(contentSigner);
     }
 
 
-    public void createCsr(Constants.KeyType keyType, int size, String dn) throws Exception {
+    public void createCsr(Constants.KeyType keyType, int size, String dn)
+            throws NoSuchAlgorithmException, OperatorCreationException, InvalidAlgorithmParameterException, NoSuchProviderException, IOException {
 
         createCsr(keyType, size, dn, null);
     }
 
 
-    public void createCsr(Constants.KeyType keyType, String dn) throws Exception {
+    public void createCsr(Constants.KeyType keyType, String dn)
+            throws IOException, OperatorCreationException, InvalidAlgorithmParameterException,
+            NoSuchAlgorithmException, NoSuchProviderException {
 
         int size;
 
@@ -106,14 +115,14 @@ public final class Csr {
 
     public PKCS10CertificationRequest getCsr () {
 
-        return csr;
+        return pkcs10CertificationRequest;
     }
 
 
     public String getCsrPEM ()
             throws IOException, CertificateEncodingException {
 
-        return PemUtils.encodeObjectToPEM(csr);
+        return PemUtils.encodeObjectToPEM(pkcs10CertificationRequest);
     }
 
 } // class

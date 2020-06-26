@@ -13,6 +13,8 @@ public class CheckedCast {
 
     public static final String LS = System.getProperty("line.separator");
 
+    private CheckedCast() {}
+
     /** Check all contained items are claimed types and fail early if they aren't */
     public static <K, V> Map<K, V> castToMapOf(
             Class<K> clazzK,

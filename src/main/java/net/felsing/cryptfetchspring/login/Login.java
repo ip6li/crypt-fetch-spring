@@ -24,13 +24,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class Login implements loginIntf {
+public class Login implements LoginIntf {
     private static final Logger logger = LoggerFactory.getLogger(Login.class);
 
     private final Configuration config;
 
-    final private static String sFalse = Boolean.toString(false);
-    final private static String sTrue = Boolean.toString(true);
+    private static final String S_FALSE = Boolean.toString(false);
+    private static final String S_TRUE = Boolean.toString(true);
+    private static final String AUTHENTICATED = "authenticated";
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
 
 
     public Login () {
@@ -66,7 +69,7 @@ public class Login implements loginIntf {
 
         } catch (IOException | CMSException e) {
             logger.error(e.getMessage());
-            result.put("authenticated", sFalse);
+            result.put(AUTHENTICATED, S_FALSE);
         }
         return result;
     }
@@ -79,20 +82,20 @@ public class Login implements loginIntf {
         HashMap<String, String> result = new HashMap<>();
 
         String username;
-        if (validate("username", credentials.get("username"))) {
-            username = credentials.get("username");
+        if (validate(USERNAME, credentials.get(USERNAME))) {
+            username = credentials.get(USERNAME);
         } else {
             logger.warn("username validation failed");
-            result.put("authenticated", sFalse);
+            result.put(AUTHENTICATED, S_FALSE);
             return result;
         }
 
         String password;
-        if (validate("password", credentials.get("password"))) {
-            password = credentials.get("password");
+        if (validate(PASSWORD, credentials.get(PASSWORD))) {
+            password = credentials.get(PASSWORD);
         } else {
             logger.warn("password validation failed");
-            result.put("authenticated", sFalse);
+            result.put(AUTHENTICATED, S_FALSE);
             return result;
         }
 
@@ -101,20 +104,20 @@ public class Login implements loginIntf {
             pkcs10 = credentials.get("csr");
         } else {
             logger.warn("csr validation failed");
-            result.put("authenticated", sFalse);
+            result.put(AUTHENTICATED, S_FALSE);
             return result;
         }
 
         if (validateCredentials(username, password)) {
             try {
                 result.put("certificate", sign("CN=" + username, pkcs10));
-                result.put("authenticated", sTrue);
+                result.put(AUTHENTICATED, S_TRUE);
             } catch (Exception e) {
                 logger.error("Cannot sign certificate");
-                result.put("authenticated", sFalse);
+                result.put(AUTHENTICATED, S_FALSE);
             }
         } else {
-            result.put("authenticated", sFalse);
+            result.put(AUTHENTICATED, S_FALSE);
         }
         return result;
     }
@@ -176,7 +179,7 @@ public class Login implements loginIntf {
         }
 
         String pattern = valuePattern;
-        if (key.equals("password")) {
+        if (key.equals(PASSWORD)) {
             pattern = passwordPattern;
         }
         if (key.equals("csr")) {

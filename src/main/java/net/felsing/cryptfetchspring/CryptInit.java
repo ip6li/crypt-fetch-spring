@@ -8,14 +8,14 @@ import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
 import net.felsing.cryptfetchspring.crypto.util.URL;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.Properties;
 
@@ -23,11 +23,17 @@ public class CryptInit {
     private static final Logger logger = LoggerFactory.getLogger(CryptInit.class.getName());
 
     private static CA ca;
-    private static ServerCertificate serverCertificate, serverSignerCertificate;
+    private static ServerCertificate serverCertificate;
+    private static ServerCertificate serverSignerCertificate;
     private static Properties properties;
     private static String servletRootPath;
 
-    static CA getInstance (String rootPath) throws Exception {
+    private CryptInit () {}
+
+    static CA getInstance (String rootPath)
+            throws IOException, CertificateException, NoSuchAlgorithmException,
+            UnrecoverableKeyException, KeyStoreException, InvalidAlgorithmParameterException,
+            URISyntaxException, OperatorCreationException, NoSuchProviderException {
         assert ProviderLoader.getProviderName()!=null;
         if (ca == null) {
             servletRootPath = rootPath;
@@ -37,9 +43,13 @@ public class CryptInit {
         return ca;
     }
 
-    private static void initPKIinfrastructure () throws Exception {
+    private static void initPKIinfrastructure ()
+            throws CertificateException, NoSuchAlgorithmException, OperatorCreationException,
+            NoSuchProviderException, InvalidAlgorithmParameterException, IOException,
+            KeyStoreException, UnrecoverableKeyException, URISyntaxException {
+        final String CAFILE = "caFile";
         properties = new Configuration().getConfig();
-        final File caFile = new File(properties.getProperty("caFile"));
+        final File caFile = new File(properties.getProperty(CAFILE));
         final String keyStorePassword = properties.getProperty("keyStorePassword");
         Constants.KeyType mode = Constants.KeyType.valueOf(properties.getProperty("keyMode"));
 
@@ -54,9 +64,9 @@ public class CryptInit {
                     Integer.valueOf(properties.getProperty("ca.days"))
             );
 
-            ca.saveCertificationAuthorityKeystore(properties.getProperty("caFile"), keyStorePassword);
+            ca.saveCertificationAuthorityKeystore(properties.getProperty(CAFILE), keyStorePassword);
         } else {
-            String p12rsa = properties.getProperty("caFile");
+            String p12rsa = properties.getProperty(CAFILE);
             ca.loadCertificationAuthorityKeystore(p12rsa, keyStorePassword);
         }
 
@@ -69,7 +79,7 @@ public class CryptInit {
         Constants.KeyType mode = Constants.KeyType.valueOf(properties.getProperty("keyMode"));
 
         if (logger.isInfoEnabled()) {
-            logger.info("generating new certificate: " + serverKeyStoreFile);
+            logger.info(String.format("generating new certificate: %s", serverKeyStoreFile));
         }
 
         File f = new File(serverKeyStoreFile);
@@ -109,7 +119,9 @@ public class CryptInit {
                         keyStoreFile,
                         keyStorePassword
                 );
-                logger.info("Using existing certificate " + keyStoreFile);
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("Using existing certificate %s", keyStoreFile));
+                }
             } catch (Exception e) {
                 logger.warn(e.getMessage());
             }

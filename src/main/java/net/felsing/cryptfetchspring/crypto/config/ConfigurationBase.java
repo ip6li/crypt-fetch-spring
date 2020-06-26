@@ -27,7 +27,7 @@ public abstract class ConfigurationBase {
 
     protected static final Properties config = new Properties();
 
-    private final static boolean bcfips = Boolean.parseBoolean(readFromVMoptions("bcfips", "false"));
+    private static final boolean BCFIPS = Boolean.parseBoolean(readFromVMoptions("bcfips", "false"));
 
 
     ConfigurationBase() {
@@ -65,11 +65,11 @@ public abstract class ConfigurationBase {
 
 
     private void preInit() {
-        if (bcfips) {
-            config.setProperty("bc", Configuration.BC_TYPE.bcfips.toString());
+        if (BCFIPS) {
+            config.setProperty("bc", Configuration.BC_TYPE.BCFIPS.toString());
             config.setProperty("bcfips.rng", "C:DEFRND[SHA512];ENABLE{ALL};");
         } else {
-            config.setProperty("bc", Configuration.BC_TYPE.bc.toString());
+            config.setProperty("bc", Configuration.BC_TYPE.BC.toString());
         }
 
         String isFips = config.getProperty("bc");
@@ -77,7 +77,7 @@ public abstract class ConfigurationBase {
             config.setProperty("js.fips",
                     Boolean.toString(
                             isFips.matches(
-                                    Configuration.BC_TYPE.bcfips.toString()
+                                    Configuration.BC_TYPE.BCFIPS.toString()
                             )
                     )
             );

@@ -56,7 +56,6 @@ public final class CA {
             return PemUtils.encodeObjectToPEM(caX509Certificate);
         } catch (CertificateEncodingException | IOException e) {
             logger.error(e.getMessage());
-            e.printStackTrace();
             return "";
         }
     }
@@ -83,6 +82,8 @@ public final class CA {
             case EC:
                 certificates.createSelfSignedCertificateEC(subjectDN);
                 break;
+            default:
+                throw new IOException("unknown mode");
         }
 
         caKeyPair = certificates.getKeyPair();
@@ -98,7 +99,7 @@ public final class CA {
         caKeyPair = KeyStoreUtils.getKeypairFromKeystore(keyStore, keystorePassword);
         caX509Certificate = KeyStoreUtils.getCertificateFromKeystore(keyStore, keystorePassword);
         if (logger.isInfoEnabled()) {
-            logger.info("Using existing CA certificate " + keystoreFile);
+            logger.info(String.format("Using existing CA certificate %s", keystoreFile));
         }
     }
 

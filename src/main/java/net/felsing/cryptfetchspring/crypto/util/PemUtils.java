@@ -26,18 +26,18 @@ import java.security.cert.*;
 public final class PemUtils {
     private static final Logger logger = LoggerFactory.getLogger(PemUtils.class);
 
+    private PemUtils () {}
+
     /**
      * Utilities to encode different X.509/Key objects to PEM
      *
      * @param pem                   pem encoded data
      * @return                      DER encoded data
      */
-    public static byte[] parseDERfromPEM(byte[] pem)
-            throws ArrayIndexOutOfBoundsException, NullPointerException {
+    public static byte[] parseDERfromPEM(byte[] pem) {
         String begin = "-----BEGIN.*?-----";
         String end = "-----END.*-----";
 
-        // deepcode ignore ReplaceBoxedConstructor~java.lang.String: valueOf does not work here
         String data = new String(pem, StandardCharsets.UTF_8)
                 .replaceFirst(begin, "")
                 .replaceFirst(end, "")
@@ -49,43 +49,43 @@ public final class PemUtils {
 
     public static String encodeObjectToPEM (X509Certificate crt) throws CertificateEncodingException, IOException {
 
-        return encodeObjectToPEM_(crt);
+        return internalEncodeObjectToPEM(crt);
     }
 
 
     public static String encodeObjectToPEM (Certificate crt) throws CertificateEncodingException, IOException {
 
-        return encodeObjectToPEM_(crt);
+        return internalEncodeObjectToPEM(crt);
     }
 
 
     public static String encodeObjectToPEM (CMSEnvelopedData cms) throws CertificateEncodingException, IOException {
 
-        return encodeObjectToPEM_(cms);
+        return internalEncodeObjectToPEM(cms);
     }
 
 
     public static String encodeObjectToPEM (CMSSignedData cms) throws CertificateEncodingException, IOException {
 
-        return encodeObjectToPEM_(cms);
+        return internalEncodeObjectToPEM(cms);
     }
 
 
     public static String encodeObjectToPEM (PKCS10CertificationRequest pkcs10) throws CertificateEncodingException, IOException {
 
-        return encodeObjectToPEM_(pkcs10);
+        return internalEncodeObjectToPEM(pkcs10);
     }
 
 
     public static String encodeObjectToPEM (PrivateKey key) throws CertificateEncodingException, IOException {
 
-        return encodeObjectToPEM_(key);
+        return internalEncodeObjectToPEM(key);
     }
 
 
     public static String encodeObjectToPEM (PublicKey key) throws CertificateEncodingException, IOException {
 
-        return encodeObjectToPEM_(key);
+        return internalEncodeObjectToPEM(key);
     }
 
 
@@ -103,60 +103,63 @@ public final class PemUtils {
      * @return          PEM encoded representation
      * @throws CertificateEncodingException     if o is not an supported type
      */
-    private static String encodeObjectToPEM_ (Object o) throws CertificateEncodingException, IOException {
+    private static String internalEncodeObjectToPEM(Object o) throws CertificateEncodingException, IOException {
         StringWriter sw = new StringWriter();
+        final String LINE64 = "(.{64})";
 
         if (o instanceof X509Certificate) {
             X509Certificate crt = (X509Certificate) o;
             sw.write(Constants.CRT_BEGIN + "\n");
             sw.write(Base64.getEncoder().encodeToString(
-                    crt.getEncoded()).replaceAll("(.{64})", "$1\n")
+                    crt.getEncoded()).replaceAll(LINE64, "$1\n")
             );
             sw.write("\n" + Constants.CRT_END + "\n");
         } else if (o instanceof Certificate) {
             Certificate cert = (Certificate) o;
             sw.write(Constants.CRT_BEGIN + "\n");
             sw.write(Base64.getEncoder().encodeToString(
-                    cert.getEncoded()).replaceAll("(.{64})", "$1\n")
+                    cert.getEncoded()).replaceAll(LINE64, "$1\n")
             );
             sw.write("\n" + Constants.CRT_END);
         } else if (o instanceof CMSEnvelopedData) {
             CMSEnvelopedData cms = (CMSEnvelopedData) o;
             sw.write(Constants.CMS_BEGIN + "\n");
             sw.write(Base64.getEncoder().encodeToString(
-                    cms.getEncoded()).replaceAll("(.{64})", "$1\n")
+                    cms.getEncoded()).replaceAll(LINE64, "$1\n")
             );
             sw.write("\n" + Constants.CMS_END);
         } else if (o instanceof CMSSignedData) {
             CMSSignedData cms = (CMSSignedData) o;
             sw.write(Constants.CMS_BEGIN + "\n");
             sw.write(Base64.getEncoder().encodeToString(
-                    cms.getEncoded()).replaceAll("(.{64})", "$1\n")
+                    cms.getEncoded()).replaceAll(LINE64, "$1\n")
             );
             sw.write("\n" + Constants.CMS_END);
         } else if (o instanceof PKCS10CertificationRequest) {
             PKCS10CertificationRequest csr = (PKCS10CertificationRequest) o;
             sw.write(Constants.CSR_BEGIN + "\n");
             sw.write(Base64.getEncoder().encodeToString(
-                    csr.getEncoded()).replaceAll("(.{64})", "$1\n")
+                    csr.getEncoded()).replaceAll(LINE64, "$1\n")
             );
             sw.write("\n" + Constants.CSR_END);
         } else if (o instanceof PrivateKey) {
             PrivateKey key = (PrivateKey) o;
             sw.write(Constants.PRIVATE_KEY_BEGIN + "\n");
             sw.write(Base64.getEncoder().encodeToString(
-                    key.getEncoded()).replaceAll("(.{64})", "$1\n")
+                    key.getEncoded()).replaceAll(LINE64, "$1\n")
             );
             sw.write("\n" + Constants.PRIVATE_KEY_END);
         } else if (o instanceof PublicKey) {
             PublicKey key = (PublicKey) o;
             sw.write(Constants.PUBLIC_KEY_BEGIN + "\n");
             sw.write(Base64.getEncoder().encodeToString(
-                    key.getEncoded()).replaceAll("(.{64})", "$1\n")
+                    key.getEncoded()).replaceAll(LINE64, "$1\n")
             );
             sw.write("\n" + Constants.PUBLIC_KEY_END);
         } else {
-            logger.error("Cannot convert class '" + o.getClass().getName() + "' to PEM");
+            if (logger.isErrorEnabled()) {
+                logger.error(String.format("Cannot convert class '%s' to PEM", o.getClass().getName()));
+            }
             throw new CertificateEncodingException(
                     "unknown Object type " +
                             o.getClass().getName() +

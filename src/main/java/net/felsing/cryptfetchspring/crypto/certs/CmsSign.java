@@ -136,13 +136,13 @@ public final class CmsSign {
             ArrayList<X509Certificate> trustStore = new ArrayList<>();
             trustStore.add(caCertificate);
             ArrayList<X509Certificate> chain = new ArrayList<>();
-            matches.forEach((k) -> {
+            matches.forEach(k -> {
                 try {
                     X509Certificate l = new JcaX509CertificateConverter().setProvider(ProviderLoader.getProviderName()).getCertificate(k);
                     chain.add(l);
                 } catch (Exception e) {
                     verifyOk[0] = false;
-                    logger.warn("Cannot validate message: " + e.getMessage());
+                    logger.warn(String.format("Cannot validate message: %s", e.getMessage()));
                 }
             });
             result.content = content;
@@ -150,7 +150,7 @@ public final class CmsSign {
             verifyOk[0] &= validateChain(trustStore, chain);
         } catch (Exception e) {
             verifyOk[0] = false;
-            logger.warn("None of the certificates are validating message: " + e.getMessage());
+            logger.warn(String.format("None of the certificates are validating message: %s", e.getMessage()));
         }
 
         result.verifyOk = verifyOk[0];
@@ -171,23 +171,23 @@ public final class CmsSign {
         try {
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
-            trustStore.forEach((k) -> {
+            trustStore.forEach(k -> {
                 try {
                     ks.setCertificateEntry(k.getSubjectDN().getName(), k);
                 } catch (Exception e) {
                     verifyOk[0] = false;
-                    logger.warn("Cannot add CA certificate to trustchain: " + e.getMessage());
+                    logger.warn(String.format("Cannot add CA certificate to trustchain: %s", e.getMessage()));
                 }
             });
 
             PKIXBuilderParameters params = new PKIXBuilderParameters(ks, new X509CertSelector());
             JcaCertStoreBuilder builder = new JcaCertStoreBuilder();
-            signers.forEach((k) -> {
+            signers.forEach(k -> {
                 try {
                     builder.addCertificate(new X509CertificateHolder(k.getEncoded()));
                 } catch (CertificateEncodingException | IOException e) {
                     verifyOk[0] = false;
-                    logger.warn("Cannot add certificate to chain: " + e.getMessage());
+                    logger.warn(String.format("Cannot add certificate to chain: %s", e.getMessage()));
                 }
             });
 
@@ -197,8 +197,7 @@ public final class CmsSign {
             cpBuilder.build(params);
         } catch (Exception e) {
             verifyOk[0] = false;
-            logger.warn("Cannot validate certificate chain: " + e.getMessage());
-
+            logger.warn(String.format("Cannot validate certificate chain: %s", e.getMessage()));
         }
 
         return verifyOk[0];

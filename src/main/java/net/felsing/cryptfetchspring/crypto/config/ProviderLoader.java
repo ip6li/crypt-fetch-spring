@@ -11,6 +11,7 @@ public final class ProviderLoader {
 
     private static Provider provider;
 
+    private ProviderLoader () {}
 
     static {
         loadBC();
@@ -21,7 +22,7 @@ public final class ProviderLoader {
         provider = new org.bouncycastle.jce.provider.BouncyCastleProvider();
         Security.addProvider(provider);
         if (logger.isInfoEnabled()) {
-            logger.info("loaded provider " + getProviderName());
+            logger.info(String.format("loaded provider %s", getProviderName()));
         }
     }
 

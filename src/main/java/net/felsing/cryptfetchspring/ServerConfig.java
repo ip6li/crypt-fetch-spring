@@ -29,11 +29,11 @@ public class ServerConfig {
     private final ServerCertificate signerCertificate;
     private final CA ca;
     private static ServerConfig serverConfig = null;
-    private static HashMap<String, Object> configuration;
+    private static final HashMap<String, Object> configuration = new HashMap<>();
+    private static final String CONFIG = "config";
 
 
     private ServerConfig (CA ca, ServerCertificate serverCertificate, ServerCertificate signerCertificate) {
-        configuration = new HashMap<>();
         this.ca = ca;
         this.serverCertificate = serverCertificate;
         this.signerCertificate = signerCertificate;
@@ -91,7 +91,7 @@ public class ServerConfig {
         final ArrayList<String> fileLocations = buildPossibleFileLocations(configJson);
 
         File[] result=new File[1];
-        fileLocations.forEach((v)->{
+        fileLocations.forEach(v -> {
             File test = new File(v);
             if (test.exists()) {
                 result[0] = test;
@@ -117,12 +117,12 @@ public class ServerConfig {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<?, ?> map = objectMapper.readValue(jsonConfigFile, Map.class);
             if (logger.isInfoEnabled()) {
-                logger.info("config.json found at " + fileLocation.getAbsolutePath());
+                logger.info(String.format("config.json found at %s", fileLocation.getAbsolutePath()));
             }
-            Map<?, ?> root = (Map<?, ?>) map.get("config");
+            Map<?, ?> root = (Map<?, ?>) map.get(CONFIG);
             Map<? ,?> certs = (Map<?, ?>) root.get("remotekeystore");
             putCerts(CheckedCast.castToMapOf(String.class, String.class, certs));
-            configuration.put("config", root);
+            configuration.put(CONFIG, root);
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
@@ -135,13 +135,13 @@ public class ServerConfig {
     }
 
 
-    public HashMap<String, Object> getConfig() {
+    public Map<String, Object> getConfig() {
 
         return configuration;
     }
 
 
-    public static HashMap<String, Object> createDefaultConfig () {
+    public static Map<String, Object> createDefaultConfig () {
         HashMap<String, Object> configRoot = new HashMap<>();
         HashMap<String, Object> config = new HashMap<>();
         HashMap<String, Object> keyAlg = new HashMap<>();
@@ -163,7 +163,7 @@ public class ServerConfig {
         config.put("messageURL", "http://127.0.0.1:8080/message");
         config.put("renewURL", "http://127.0.0.1:8080/renew");
 
-        configRoot.put("config", config);
+        configRoot.put(CONFIG, config);
 
         return configRoot;
     }

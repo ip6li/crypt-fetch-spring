@@ -64,7 +64,7 @@ public final class Signer {
     private X500Name subject = null;
     private Date validTo;
 
-    private enum modeEnum {client, server}
+    private enum modeEnum {CLIENT, SERVER}
 
     
     public Signer() {
@@ -77,7 +77,7 @@ public final class Signer {
             NoSuchAlgorithmException, IOException,
             NoSuchProviderException, CertificateException, InvalidKeySpecException {
 
-        return sign(modeEnum.client, inputCSR, privateKey, caCertificate);
+        return sign(modeEnum.CLIENT, inputCSR, privateKey, caCertificate);
     }
 
 
@@ -86,7 +86,7 @@ public final class Signer {
             NoSuchAlgorithmException, IOException,
             NoSuchProviderException, CertificateException, InvalidKeySpecException {
 
-        return sign(modeEnum.server, inputCSR, privateKey, caCertificate);
+        return sign(modeEnum.SERVER, inputCSR, privateKey, caCertificate);
     }
 
 
@@ -113,7 +113,7 @@ public final class Signer {
                         "EC"
                 );
             } catch (Exception e) {
-                logger.error("Neither RSA nor EC key: " + e.getMessage());
+                logger.error(String.format("Neither RSA nor EC key: %s", e.getMessage()));
             }
         }
 
@@ -182,10 +182,10 @@ public final class Signer {
         );
 
         switch (mode) {
-            case client:
+            case CLIENT:
                 setKeyUsageClient(x509v3CertificateBuilder);
                 break;
-            case server:
+            case SERVER:
                 setKeyUsageServer(x509v3CertificateBuilder);
                 break;
         }
@@ -198,11 +198,11 @@ public final class Signer {
         AlgorithmIdentifier digAlgId;
 
         if (caPrivateKeyAlgorithm.matches("EC.*")) {
-            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA256withECDSA);
+            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA_256_WITH_ECDSA);
             digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
             sigGen = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(asymmetricKeyParameter);
         } else if (caPrivateKeyAlgorithm.matches("RSA")) {
-            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA256withRSA);
+            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA_256_WITH_RSA);
             digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
             sigGen = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(asymmetricKeyParameter);
         } else {

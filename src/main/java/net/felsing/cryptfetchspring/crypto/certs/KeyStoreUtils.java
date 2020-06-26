@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 
 public final class KeyStoreUtils {
     private static final Logger logger = LoggerFactory.getLogger(KeyStoreUtils.class);
-    private enum KS_MODE {keypair, certificate}
+    private enum KS_MODE {KEYPAIR, CERTIFICATE}
 
     public static KeyStore loadKeystore(String keystoreFile, String keystorePassword) throws
             KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
@@ -28,14 +28,14 @@ public final class KeyStoreUtils {
     public static X509Certificate getCertificateFromKeystore(KeyStore keyStore, String keystorePassword)
             throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
 
-        return (X509Certificate) getKeyPairOrCertificate(KS_MODE.certificate, keyStore, keystorePassword);
+        return (X509Certificate) getKeyPairOrCertificate(KS_MODE.CERTIFICATE, keyStore, keystorePassword);
     }
 
 
     public static KeyPair getKeypairFromKeystore(KeyStore keyStore, String keystorePassword)
             throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
 
-        return (KeyPair) getKeyPairOrCertificate(KS_MODE.keypair, keyStore, keystorePassword);
+        return (KeyPair) getKeyPairOrCertificate(KS_MODE.KEYPAIR, keyStore, keystorePassword);
     }
 
 
@@ -98,9 +98,9 @@ public final class KeyStoreUtils {
         }
 
         switch (ksMode) {
-            case keypair:
+            case KEYPAIR:
                 return new KeyPair(publicKey, privateKey);
-            case certificate:
+            case CERTIFICATE:
                 return x509Certificate;
         }
 

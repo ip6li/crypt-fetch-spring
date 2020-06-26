@@ -48,8 +48,8 @@ import java.util.Iterator;
 public final class EncryptAndDecrypt {
     private static final Logger logger = LoggerFactory.getLogger(EncryptAndDecrypt.class);
 
-    private static final String mdName = "SHA-512";
-    private static final String mdgName = "MGF1";
+    private static final String MD_NAME = "SHA-512";
+    private static final String MDG_NAME = "MGF1";
 
 
     public byte[] decrypt(PrivateKey privateKey, X509Certificate encryptionCert, String encryptedDataPEM)
@@ -145,9 +145,9 @@ public final class EncryptAndDecrypt {
 
         JcaAlgorithmParametersConverter paramsConverter = new JcaAlgorithmParametersConverter();
         OAEPParameterSpec oaepSpec = new OAEPParameterSpec(
-                mdName,
-                mdgName,
-                new MGF1ParameterSpec(mdName),
+                MD_NAME,
+                MDG_NAME,
+                new MGF1ParameterSpec(MD_NAME),
                 PSource.PSpecified.DEFAULT
         );
 
@@ -165,7 +165,7 @@ public final class EncryptAndDecrypt {
         );
 
         if (logger.isDebugEnabled()) {
-            logger.debug("encrypt: " + cert.getSigAlgName());
+            logger.debug(String.format("encrypt: %s", cert.getSigAlgName()));
         }
         ASN1ObjectIdentifier cmsAlgorithm;
         cmsAlgorithm = CMSAlgorithm.AES256_CBC; // AES256_GCM does not work with PKI.js
@@ -224,11 +224,11 @@ public final class EncryptAndDecrypt {
     }
 
 
-    private static RecipientInformation getSingleRecipient(CMSEnvelopedDataParser parser) {
+    private static RecipientInformation getSingleRecipient(CMSEnvelopedDataParser parser) throws IOException {
         Collection<RecipientInformation> recInfos = parser.getRecipientInfos().getRecipients();
         Iterator<RecipientInformation> recipientIterator = recInfos.iterator();
         if (!recipientIterator.hasNext()) {
-            throw new RuntimeException("Could not find recipient");
+            throw new IOException("Could not find recipient");
         }
         return recipientIterator.next();
     }

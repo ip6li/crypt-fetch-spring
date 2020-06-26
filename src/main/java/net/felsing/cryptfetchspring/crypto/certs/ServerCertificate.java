@@ -32,7 +32,7 @@ import java.security.cert.X509Certificate;
 public final class ServerCertificate {
     private static final Logger logger = LoggerFactory.getLogger(ServerCertificate.class);
     private KeyPair keyPair;
-    private X509Certificate serverCertificate;
+    private X509Certificate x509ServerCertificate;
 
 
     public KeyPair getServerKeyPair() {
@@ -43,12 +43,12 @@ public final class ServerCertificate {
     
     public X509Certificate getServerCertificate () {
 
-        return serverCertificate;
+        return x509ServerCertificate;
     }
 
     public String getServerCertificatePEM () throws CertificateEncodingException, IOException {
 
-        return PemUtils.encodeObjectToPEM(serverCertificate);
+        return PemUtils.encodeObjectToPEM(x509ServerCertificate);
     }
 
     public void generate (CA ca, String dn, Constants.KeyType mode, int validForDays) {
@@ -81,7 +81,7 @@ public final class ServerCertificate {
                     ca.getCaCertificatePEM()
             );
 
-            serverCertificate = PemUtils.getCertificateFromPem (signedCertificate);
+            x509ServerCertificate = PemUtils.getCertificateFromPem (signedCertificate);
         } catch (Exception e) {
             logger.warn(e.getMessage());
         }
@@ -98,7 +98,7 @@ public final class ServerCertificate {
         );
 
         keyPair = KeyStoreUtils.getKeypairFromKeystore(keyStore, password);
-        serverCertificate = KeyStoreUtils.getCertificateFromKeystore(keyStore, password);
+        x509ServerCertificate = KeyStoreUtils.getCertificateFromKeystore(keyStore, password);
     }
 
 
