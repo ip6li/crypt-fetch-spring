@@ -1,5 +1,6 @@
 package net.felsing.cryptfetchspring.crypto.util;
 
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.io.serialization.ValidatingObjectInputStream;
 
 
 public final class JsonUtils {
@@ -50,7 +52,9 @@ public final class JsonUtils {
     public static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         ObjectInputStream is = new ObjectInputStream(in);
-        return is.readObject();
+        ValidatingObjectInputStream validator = new ValidatingObjectInputStream(is);
+        validator.accept(Map.class, String.class);
+        return validator.readObject();
     }
 
 } // class
