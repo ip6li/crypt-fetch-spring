@@ -73,6 +73,14 @@ throwaway certificates.
 
 Please be aware of that authorization of request is not in scope of this PoC.
 
+## Dependencies
+
+Maven pom.xml contains a dependency checker (OWASP). To check dependencies, use
+
+    mvn verify
+
+which should provide possible vulnerabilities in dependencies.
+
 # Status
 
 Pre Alpha, mostly incomplete. Do not use in production environments.
