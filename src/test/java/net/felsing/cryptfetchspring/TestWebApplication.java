@@ -46,7 +46,7 @@ class TestWebApplication {
         if (config==null) {
             String url = "http://localhost:" + port + "/config";
             config = restTemplate.getForObject(url, String.class);
-            Map<?,?> map = JsonUtils.json2map(config);
+            Map<String,Object> map = JsonUtils.json2map(config);
 
             @SuppressWarnings("rawtypes")
             Map<String,Object> configMap = CheckedCast.castToMapOf(

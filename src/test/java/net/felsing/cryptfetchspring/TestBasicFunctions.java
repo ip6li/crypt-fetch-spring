@@ -1,11 +1,15 @@
 package net.felsing.cryptfetchspring;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TSFBuilder;
 import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.bouncycastle.asn1.x509.GeneralName;
@@ -14,6 +18,8 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.io.Serializable;
 import java.security.KeyPair;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -199,5 +205,22 @@ class TestBasicFunctions {
         assert keyPair != null;
         assert x509Certificate != null;
         logger.info("testSelfSignedCertificateRSA:\n{}", PemUtils.encodeObjectToPEM(x509Certificate));
+    }
+
+    @Test
+    public void testGenErrorString () {
+        String res = JsonUtils.genErrorString("test");
+        assert res!=null;
+    }
+
+    @Test
+    public void testSerialize () throws Exception {
+        TestClass testClass = new TestClass();
+        testClass.setS1("blah");
+        testClass.setS2("fasel");
+        byte[] serialized = JsonUtils.serialize(testClass);
+        TestClass deserialize = JsonUtils.deserialize(serialized);
+        System.out.println(deserialize.getS1());
+        System.out.println(deserialize.getS2());
     }
 }
