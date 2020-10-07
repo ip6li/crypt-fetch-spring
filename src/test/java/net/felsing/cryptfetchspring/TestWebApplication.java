@@ -44,7 +44,7 @@ class TestWebApplication {
 
     private void loadConfig () throws JsonProcessingException, CertificateException {
         if (config==null) {
-            String url = "http://localhost:" + port + "/config";
+            String url = String.format("http://localhost:%d/config", port);
             config = restTemplate.getForObject(url, String.class);
             Map<String,Object> map = JsonUtils.json2map(config);
 
@@ -96,7 +96,7 @@ class TestWebApplication {
 
     private Map<String, String> login (String username, String password, String pemCsr)
         throws Exception {
-        String url = "http://localhost:" + port + "/login";
+        String url = String.format("http://localhost:%d/login", port);
 
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
 
@@ -134,8 +134,7 @@ class TestWebApplication {
 
     private String doMessage (String path, KeyPair senderKeyPair, X509Certificate senderCert, byte[] message)
             throws Exception {
-        String url = "http://localhost:" + port + path;
-
+        String url = String.format("http://localhost:%d%s", port, path);
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
         CmsSign cmsSign = new CmsSign();
 
@@ -168,8 +167,8 @@ class TestWebApplication {
 
         String content = new String(result.getContent());
         if (logger.isInfoEnabled()) {
-            logger.info("[testMessage] response content: " + content);
-            logger.info("[testMessage] response validated: " + result.isVerifyOk());
+            logger.info(String.format("[testMessage] response content: %s", content));
+            logger.info(String.format("[testMessage] response validated: %b", result.isVerifyOk()));
         }
 
         Map<String, String> contentHashMap = CheckedCast.castToMapOf(String.class, String.class, JsonUtils.json2map(content));
