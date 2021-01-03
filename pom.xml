@@ -23,7 +23,7 @@
         <java.version>11</java.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <bc.version>1.67</bc.version>
+        <bc.version>1.68</bc.version>
         <webserver>undertow</webserver>
     </properties>
 
