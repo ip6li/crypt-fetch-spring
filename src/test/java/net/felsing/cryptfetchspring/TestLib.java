@@ -6,33 +6,36 @@ import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
 
 public class TestLib {
     private static final Logger logger = LoggerFactory.getLogger(TestLib.class);
+    public static final String pkiPath = "/tmp/pki";
 
     private static CA ca;
     private static TestLib testLib;
     private final Configuration config;
 
-
-    private TestLib() throws Exception {
+    private TestLib(String caRootPath) throws Exception {
         logger.debug("TestLib initialized");
-        ca = CryptInit.getInstance("./");
+        ca = CryptInit.getInstance(caRootPath);
+        logger.info(String.format("caRootPath: %s", caRootPath));
         ca.setOcspCritical(false);
-        ServerConfig.getInstance(ca, CryptInit.getServerCertificate(), CryptInit.getSignerCertificate());
+        ServerConfig.getInstance(ca, CryptInit.getServerCertificate());
         config = new Configuration();
     }
 
 
-    public static TestLib getInstance() throws Exception {
+    public static TestLib getInstance(String caRootPath) throws Exception {
 
         if (testLib == null) {
-            testLib = new TestLib();
+            testLib = new TestLib(caRootPath);
         }
 
         return testLib;
@@ -79,6 +82,16 @@ public class TestLib {
     public static X509Certificate getCaCertificate() {
 
         return ca.getCaX509Certificate();
+    }
+
+    public static boolean deleteDirectory(File dir) {
+        File[] allContents = dir.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return dir.delete();
     }
 
 }

@@ -5,14 +5,15 @@ import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,24 +27,33 @@ public class ServerConfig {
     private static final Logger logger = LoggerFactory.getLogger(ServerConfig.class);
 
     private final ServerCertificate serverCertificate;
-    private final ServerCertificate signerCertificate;
     private final CA ca;
     private static ServerConfig serverConfig = null;
     private static final HashMap<String, Object> configuration = new HashMap<>();
     private static final String CONFIG = "config";
 
 
-    private ServerConfig (CA ca, ServerCertificate serverCertificate, ServerCertificate signerCertificate) {
+    private ServerConfig (CA ca, ServerCertificate serverCertificate, InputStream defaultConfig)
+            throws IOException {
         this.ca = ca;
         this.serverCertificate = serverCertificate;
-        this.signerCertificate = signerCertificate;
-        putConfigJson();
+        putConfigJson(defaultConfig);
     }
 
 
-    public static ServerConfig getInstance (CA ca, ServerCertificate serverCertificate, ServerCertificate signerCertificate) {
+    public static ServerConfig getInstance (CA ca, ServerCertificate serverCertificate, InputStream defaultConfig)
+            throws IOException {
         if (serverConfig == null) {
-            serverConfig = new ServerConfig(ca, serverCertificate, signerCertificate);
+            serverConfig = new ServerConfig(ca, serverCertificate, defaultConfig);
+        }
+        return serverConfig;
+    }
+
+
+    public static ServerConfig getInstance (CA ca, ServerCertificate serverCertificate)
+            throws IOException {
+        if (serverConfig == null) {
+            serverConfig = new ServerConfig(ca, serverCertificate, null);
         }
         return serverConfig;
     }
@@ -82,6 +92,7 @@ public class ServerConfig {
         fileLocations.add(System.getProperty("user.home") + "/.crypt-fetch/" + filename);
         fileLocations.add("/etc/crypt-fetch/" + filename);
 
+        fileLocations.forEach((v)-> logger.info(String.format("buildPossibleFileLocations: %s", v)));
         return fileLocations;
     }
 
@@ -101,31 +112,36 @@ public class ServerConfig {
             return result[0];
         }
 
-        logger.error("config.json nowhere found");
         return null;
     }
 
 
-
-    private void putConfigJson () {
+    private void putConfigJson (InputStream defaultConfig) throws IOException {
         File fileLocation = findConfigJson();
         if (fileLocation==null) {
-            logger.info("config.json not found");
-        }
-        assert fileLocation != null;
-        try (FileInputStream jsonConfigFile = new FileInputStream(fileLocation.getAbsoluteFile())) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            Map<?, ?> map = objectMapper.readValue(jsonConfigFile, Map.class);
-            if (logger.isInfoEnabled()) {
-                logger.info(String.format("config.json found at %s", fileLocation.getAbsolutePath()));
+            logger.info("config.json not found, using default config from classpath");
+            readConfigJson(defaultConfig);
+        } else {
+            try (FileInputStream jsonConfigFile = new FileInputStream(fileLocation.getAbsoluteFile())) {
+                if (logger.isInfoEnabled()) {
+                    logger.info(String.format("config.json found at %s", fileLocation.getAbsolutePath()));
+                }
+                readConfigJson(jsonConfigFile);
+            } catch (IOException e) {
+                logger.error(e.getMessage());
             }
-            Map<?, ?> root = (Map<?, ?>) map.get(CONFIG);
-            Map<? ,?> certs = (Map<?, ?>) root.get("remotekeystore");
-            putCerts(CheckedCast.castToMapOf(String.class, String.class, certs));
-            configuration.put(CONFIG, root);
-        } catch (IOException e) {
-            logger.error(e.getMessage());
         }
+    }
+
+
+    private void readConfigJson (InputStream json) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<?, ?> map = objectMapper.readValue(json, Map.class);
+        Map<?, ?> root = (Map<?, ?>) map.get(CONFIG);
+        Map<? ,?> certs = (Map<?, ?>) root.get("remotekeystore");
+        putCerts(CheckedCast.castToMapOf(String.class, String.class, certs));
+        configuration.put(CONFIG, root);
+        logger.info("readConfigJson: Config set");
     }
 
 

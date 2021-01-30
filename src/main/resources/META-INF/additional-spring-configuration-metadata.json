@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "pki.path",
+      "type": "java.lang.String",
+      "description": "Description for pki.path."
+    }
+  ]
+}

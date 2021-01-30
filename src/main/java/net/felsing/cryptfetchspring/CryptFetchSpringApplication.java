@@ -4,14 +4,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.login.Login;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.lang.NonNull;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.ServletContextAware;
+
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,17 +35,25 @@ public class CryptFetchSpringApplication implements ServletContextAware {
     private static ServerConfig serverConfig;
     private ServletContext servletContext;
 
+    @Value("${pki.path}")
+    private String caRootPath;
+
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(CryptFetchSpringApplication.class);
         application.run(args);
     }
 
 
-    private static void setServerConfig (CA ca) {
+    private static void setServerConfig (CA ca) throws IOException {
+        final String configJsonFile = "config.json";
+        ClassPathResource resource = new ClassPathResource(configJsonFile);
+        if(!resource.exists()){
+            logger.info(String.format("%s file does not exist.", configJsonFile));
+        }
         serverConfig = ServerConfig.getInstance(
                 ca,
                 CryptInit.getServerCertificate(),
-                CryptInit.getSignerCertificate()
+                resource.getInputStream()
         );
     }
 
@@ -47,11 +64,14 @@ public class CryptFetchSpringApplication implements ServletContextAware {
             String absolutePath = servletContext.getRealPath("resources");
             if (logger.isInfoEnabled()) {
                 logger.info(String.format("[addInitHooks] absolutePath: %s", absolutePath));
+                logger.info(String.format("caRootPath: %s", caRootPath));
             }
-            CA ca = CryptInit.getInstance("./");
+
+            CA ca = CryptInit.getInstance(caRootPath);
             setServerConfig(ca);
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error(String.format("addInitHooks: %s", e.getMessage()));
+            e.printStackTrace();
         }
     }
 
@@ -70,7 +90,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         try {
             return login.login(request);
         } catch (Exception e) {
-            logger.warn(e.getMessage());
+            logger.warn(String.format("login: %s", e.getMessage()));
             HashMap<String, String> result = new HashMap<>();
             result.put(ERROR, "Login failed");
             return result;
@@ -88,7 +108,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         try {
             return messageHandler.doRequest(request, PayloadRenew.getInstance());
         } catch (Exception e) {
-            logger.warn(e.getMessage());
+            logger.warn(String.format("renew: %s", e.getMessage()));
         }
 
         String returnValue;
@@ -112,7 +132,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         try {
             return messageHandler.doRequest(request, PayloadMessage.getInstance());
         } catch (Exception e) {
-            logger.warn(e.getMessage());
+            logger.warn(String.format("message: %s", e.getMessage()));
         }
 
         String returnValue;
@@ -128,11 +148,11 @@ public class CryptFetchSpringApplication implements ServletContextAware {
     @GetMapping(value = "/")
     public String getRoot() {
         //ToDo: Provide default communications
-        return "getRoot()";
+        return "getRoot();";
     }
 
     @Override
-    public void setServletContext(ServletContext servletContext) {
+    public void setServletContext(@NonNull ServletContext servletContext) {
 
         this.servletContext = servletContext;
     }

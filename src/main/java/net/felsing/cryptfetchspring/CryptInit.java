@@ -9,18 +9,18 @@ import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
 import net.felsing.cryptfetchspring.crypto.util.URL;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.Properties;
 
 public class CryptInit {
-    private static final Logger logger = LoggerFactory.getLogger(CryptInit.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(CryptInit.class);
 
     private static CA ca;
     private static ServerCertificate serverCertificate;
@@ -28,7 +28,7 @@ public class CryptInit {
     private static Properties properties;
     private static String servletRootPath;
 
-    private CryptInit () {}
+    private CryptInit () { }
 
     static CA getInstance (String rootPath)
             throws IOException, CertificateException, NoSuchAlgorithmException,
@@ -49,7 +49,7 @@ public class CryptInit {
             KeyStoreException, UnrecoverableKeyException, URISyntaxException {
         final String CAFILE = "caFile";
         properties = new Configuration().getConfig();
-        final File caFile = new File(properties.getProperty(CAFILE));
+        final File caFile = new File(String.format("%s/%s", servletRootPath, properties.getProperty(CAFILE)));
         final String keyStorePassword = properties.getProperty("keyStorePassword");
         Constants.KeyType mode = Constants.KeyType.valueOf(properties.getProperty("keyMode"));
 
@@ -64,10 +64,9 @@ public class CryptInit {
                     Integer.valueOf(properties.getProperty("ca.days"))
             );
 
-            ca.saveCertificationAuthorityKeystore(properties.getProperty(CAFILE), keyStorePassword);
+            ca.saveCertificationAuthorityKeystore(caFile.getAbsolutePath(), keyStorePassword);
         } else {
-            String p12rsa = properties.getProperty(CAFILE);
-            ca.loadCertificationAuthorityKeystore(p12rsa, keyStorePassword);
+            ca.loadCertificationAuthorityKeystore(caFile.getAbsolutePath(), keyStorePassword);
         }
 
         loadCertificates();

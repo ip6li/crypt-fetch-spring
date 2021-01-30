@@ -1,34 +1,20 @@
 package net.felsing.cryptfetchspring;
 
-import org.springframework.boot.autoconfigure.web.servlet.error.AbstractErrorController;
-import org.springframework.boot.web.servlet.error.ErrorAttributes;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver;
+
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
+import javax.servlet.http.HttpServletResponse;
 
 
-@Controller
-@RequestMapping("${server.error.path:${error.path:/error}}")
-public class ErrorHandler extends AbstractErrorController {
-
-    public ErrorHandler(ErrorAttributes errorAttributes) {
-        super(errorAttributes);
-    }
-
-    @GetMapping(path = "/")
-    public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
-        Map<String, Object> body = getErrorAttributes(request,
-                false);
-        HttpStatus status = getStatus(request);
-        return new ResponseEntity<>(body, status);
-    }
+@Component
+public class ErrorHandler extends AbstractHandlerExceptionResolver {
 
     @Override
-    public String getErrorPath() {
-        return null;
+    protected ModelAndView doResolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+
+        logger.error(String.format("%s", ex.getMessage()));
+        return new ModelAndView();
     }
 }
