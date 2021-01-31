@@ -1,15 +1,18 @@
 package net.felsing.cryptfetchspring;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
-import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
-import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
+import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+import net.felsing.cryptfetchspring.login.LoginModel;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -19,14 +22,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,30 +53,38 @@ class TestWebApplication {
     @Autowired
     private CryptFetchSpringApplication controller;
 
+    @JsonRootName(value = "loginresponse")
+    private static class LoginResponse {
+        private final HashMap<String, String> resp = new HashMap<>();
 
-    private void loadConfig () throws JsonProcessingException, CertificateException {
-        if (config==null) {
-            final String url = String.format("http://localhost:%d/config", port);
-            config = restTemplate.getForObject(url, String.class);
-            final Map<String,Object> map = JsonUtils.json2map(config);
-
-            @SuppressWarnings("rawtypes")
-            final Map<String,Object> configMap = CheckedCast.castToMapOf(
-                    String.class,
-                    Object.class,
-                    (Map)map.get("config")
-            );
-            @SuppressWarnings("rawtypes")
-            final Map<String,Object> remotekeystore = CheckedCast.castToMapOf(
-                    String.class,
-                    Object.class,
-                    (Map)configMap.get("remotekeystore")
-            );
-
-            ca = (String)remotekeystore.get("ca");
-            final String serverCertificatePem = (String)remotekeystore.get("server");
-            serverCertificate = PemUtils.getCertificateFromPem(serverCertificatePem);
+        public LoginResponse (
+                @JsonProperty("authenticated") boolean authenticated,
+                @JsonProperty("certificate") String certificate
+        ) {
+            resp.put("authenticated", Boolean.toString(authenticated));
+            resp.put("certificate", certificate);
         }
+
+        @JsonGetter
+        public HashMap<String, String> getResp() { return resp; }
+
+        public static LoginResponse deserialize(String json) throws JsonProcessingException {
+            ObjectMapper om = new ObjectMapper();
+            return om.readerFor(LoginResponse.class).readValue(json);
+        }
+    }
+
+
+    private void loadConfig2 ()
+            throws IOException, CertificateException {
+        final String url = String.format("http://localhost:%d/config", port);
+        config = restTemplate.getForObject(url, String.class);
+        InputStream targetStream = new ByteArrayInputStream(config.getBytes());
+        ConfigModel configModel = ConfigModel.deserialize(targetStream);
+        HashMap<String, String> remotekeystore = configModel.getRemotekeystore();
+        ca = remotekeystore.get("ca");
+        final String serverCertificatePem = remotekeystore.get("server");
+        serverCertificate = PemUtils.getCertificateFromPem(serverCertificatePem);
     }
 
 
@@ -114,38 +126,38 @@ class TestWebApplication {
     }
 
 
-    private Map<String, String> login (String username, String password, String pemCsr)
+    private LoginResponse login (String username, String password, String pemCsr)
         throws Exception {
         final String url = String.format("http://localhost:%d/login", port);
 
+        final LoginModel loginModel = new LoginModel(username, password, pemCsr);
         final EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
 
-        final HashMap<String,String> map = new HashMap<>();
-        map.put("username", username);
-        map.put("password", password);
-        map.put("csr", pemCsr);
-        final String jsonResult = JsonUtils.map2json(map);
-        final String encrypted = encryptAndDecrypt.encryptPem(null, null, serverCertificate, jsonResult.getBytes());
+        final byte[] jsonResult = loginModel.serialize();
+        final String encrypted = encryptAndDecrypt.encryptPem(null, null, serverCertificate, jsonResult);
 
         final String response = this.restTemplate.postForObject(url, encrypted, String.class);
-
-        return CheckedCast.castToMapOf(String.class, String.class, JsonUtils.json2map(response));
+        return LoginResponse.deserialize(response);
     }
 
 
     @Test
     void testLogin () throws Exception {
-        loadConfig();
+        loadConfig2();
 
         final String username = "myUserName";
         final String password = "myPassword";
         final Csr csr = testLib.genCsr("CN=cert1");
         final String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
 
-        final Map<String, String> respMap = login(username, password, pemCsr);
+        final LoginResponse respMap = login(username, password, pemCsr);
 
-        final boolean authenticated = Boolean.parseBoolean(respMap.get("authenticated"));
-        final String certificate = respMap.get("certificate");
+        final boolean authenticated = Boolean.parseBoolean(respMap.getResp().get("authenticated"));
+        final String certificate = respMap.getResp().get("certificate");
+
+        respMap.getResp().forEach((k, v)->{
+            logger.info(String.format("testLogin: %s: %s", k, v));
+        });
 
         assertTrue(authenticated);
         assertNotNull(certificate);
@@ -175,9 +187,9 @@ class TestWebApplication {
 
         final String plainTextSend = "Hello world! Umlaute: äöüÄÖÜß€";
 
-        final Map<String,String> loginResp = login(username, password, pemCsr);
+        final LoginResponse loginResp = login(username, password, pemCsr);
 
-        final String clientCertPem = loginResp.get("certificate");
+        final String clientCertPem = loginResp.getResp().get("certificate");
         final X509Certificate clientCert = PemUtils.getCertificateFromPem(clientCertPem);
 
         final String response = doMessage("/message", csr.getKeyPair(), clientCert, plainTextSend.getBytes());
@@ -191,10 +203,11 @@ class TestWebApplication {
             logger.info(String.format("[testMessage] response validated: %b", result.isVerifyOk()));
         }
 
-        final Map<String, String> contentHashMap = CheckedCast.castToMapOf(String.class, String.class, JsonUtils.json2map(content));
+        logger.info(String.format("testMessage: %s", content));
+        final PayloadModel contentHashMap = PayloadModel.deserialize(result.getContent());
 
-        assertTrue(contentHashMap.containsKey("foo"));
-        assertTrue(contentHashMap.containsValue("bar äöüÄÖÜß€"));
+        assertTrue(contentHashMap.getMapWithStrings().containsKey("foo"));
+        assertTrue(contentHashMap.getMapWithStrings().containsValue("bar äöüÄÖÜß€"));
         assertTrue(result.isVerifyOk());
     }
 
@@ -207,9 +220,9 @@ class TestWebApplication {
         // Build a valid certificate
         final Csr csr = testLib.genCsr("CN=cert3");
         final String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
-        final Map<String,String> loginResp = login(username, password, pemCsr);
+        final LoginResponse loginResp = login(username, password, pemCsr);
 
-        final String clientCertPem = loginResp.get("certificate");
+        final String clientCertPem = loginResp.getResp().get("certificate");
         final X509Certificate clientCert = PemUtils.getCertificateFromPem(clientCertPem);
 
         final String response = doMessage("/renew", csr.getKeyPair(), clientCert, pemCsr.getBytes());
@@ -217,10 +230,10 @@ class TestWebApplication {
         final byte[] decryptedText = decrypt(csr.getKeyPair().getPrivate(), clientCert, response);
         final CmsSign.Result result = validate(decryptedText);
 
-        final Map<String,String> resultMap = CheckedCast.castToMapOf(String.class,String.class,
-                JsonUtils.json2map(new String(result.getContent())));
+        logger.info(new String(result.getContent()));
+        final RenewModel resultMap = RenewModel.deserialize(result.getContent());
 
-        final String newCertPEM = resultMap.get("certificate");
+        final String newCertPEM = resultMap.getCertificate();
         final X509Certificate newCert = PemUtils.getCertificateFromPem(newCertPEM);
 
         assertNotNull(newCert);

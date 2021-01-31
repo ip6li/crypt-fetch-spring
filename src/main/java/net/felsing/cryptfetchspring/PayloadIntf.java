@@ -7,6 +7,6 @@ import java.util.Map;
 
 public interface PayloadIntf {
 
-    Map<?,?> doPayload (CmsSign.Result plainTextContent) throws IOException;
+    byte[] doPayload (CmsSign.Result plainTextContent) throws IOException;
 
 }

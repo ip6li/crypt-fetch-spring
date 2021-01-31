@@ -1,17 +1,16 @@
 package net.felsing.cryptfetchspring;
 
-import net.felsing.cryptfetchspring.crypto.certs.*;
+import net.felsing.cryptfetchspring.crypto.certs.CA;
+import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
+import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
-import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 
 public class PayloadRenew implements PayloadIntf {
@@ -34,7 +33,7 @@ public class PayloadRenew implements PayloadIntf {
 
 
     @Override
-    public Map<String,String> doPayload (CmsSign.Result plainTextContent)
+    public byte[] doPayload (CmsSign.Result plainTextContent)
             throws IOException {
         long errNoCounter = 100000; // create unique error numbers on each step
 
@@ -48,7 +47,8 @@ public class PayloadRenew implements PayloadIntf {
             subject = x509Certificate.getSubjectDN().getName();
         } catch (Exception e) {
             logger.warn("renew failed: {} ({})", errNoCounter, e.getMessage());
-            return JsonUtils.genError("renew failed: " + errNoCounter);
+            ErrorModel errorModel = new ErrorModel(String.format("renew failed: %d", errNoCounter));
+            return errorModel.serialize();
         }
 
         errNoCounter++;
@@ -65,13 +65,15 @@ public class PayloadRenew implements PayloadIntf {
             );
         } catch (Exception e) {
             logger.warn(String.format("renew failed: %s (%s)", errNoCounter, e));
-            return JsonUtils.genError(String.format("renew failed: %d", errNoCounter));
+            ErrorModel errorModel = new ErrorModel(String.format("renew failed: %s (%s)", errNoCounter, e));
+            return errorModel.serialize();
         }
 
-        HashMap<String, String> renewResult = new HashMap<>();
-        renewResult.put("certificate", signedClientCert);
+        //HashMap<String, String> renewResult = new HashMap<>();
+        //renewResult.put("certificate", signedClientCert);
+        RenewModel renewResult = new RenewModel(signedClientCert);
 
-        return renewResult;
+        return renewResult.serialize();
     }
 
 } // class

@@ -2,12 +2,12 @@ package net.felsing.cryptfetchspring;
 
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
-import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
@@ -48,15 +48,16 @@ public class MessageHandler {
         List<X509Certificate> clientCertificates = plainTextAndValidatedReq.getCertificates();
         X509Certificate clientCert = clientCertificates.get(0);
 
-        String jsonResponse;
+        byte[] jsonResponse;
         try {
-            jsonResponse = JsonUtils.map2json(callback.doPayload(plainTextAndValidatedReq));
+            jsonResponse = callback.doPayload(plainTextAndValidatedReq);
         } catch (Exception e) {
-            jsonResponse = JsonUtils.map2json(JsonUtils.genError("Cannot process payload"));
+            ErrorModel errorModel = new ErrorModel("Cannot process payload");
+            jsonResponse = errorModel.serialize();
             logger.error(e.getMessage());
         }
 
-        CMSSignedData cmsSignedResp = cmsSign.signCmsEnveloped(serverKeyPair, serverCert, jsonResponse.getBytes());
+        CMSSignedData cmsSignedResp = cmsSign.signCmsEnveloped(serverKeyPair, serverCert, jsonResponse);
 
         return encryptAndDecrypt.encryptPem(
                 serverKeyPair.getPrivate(),

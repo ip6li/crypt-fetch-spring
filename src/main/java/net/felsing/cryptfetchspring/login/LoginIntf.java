@@ -7,6 +7,6 @@ import java.util.Map;
 
 public interface LoginIntf {
 
-    Map<?, ?> login (String cms) throws IOException, CMSException;
+    Map<String, String> login (String cms) throws IOException, CMSException;
 
 }

@@ -1,23 +1,19 @@
 package net.felsing.cryptfetchspring;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
+import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
-import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 
 /*************************************************************************************************************
@@ -29,11 +25,10 @@ public class ServerConfig {
     private final ServerCertificate serverCertificate;
     private final CA ca;
     private static ServerConfig serverConfig = null;
-    private static final HashMap<String, Object> configuration = new HashMap<>();
-    private static final String CONFIG = "config";
+    private static ConfigModel configuration;
 
 
-    private ServerConfig (CA ca, ServerCertificate serverCertificate, InputStream defaultConfig)
+    private ServerConfig(CA ca, ServerCertificate serverCertificate, InputStream defaultConfig)
             throws IOException {
         this.ca = ca;
         this.serverCertificate = serverCertificate;
@@ -41,7 +36,7 @@ public class ServerConfig {
     }
 
 
-    public static ServerConfig getInstance (CA ca, ServerCertificate serverCertificate, InputStream defaultConfig)
+    public static ServerConfig getInstance(CA ca, ServerCertificate serverCertificate, InputStream defaultConfig)
             throws IOException {
         if (serverConfig == null) {
             serverConfig = new ServerConfig(ca, serverCertificate, defaultConfig);
@@ -50,7 +45,7 @@ public class ServerConfig {
     }
 
 
-    public static ServerConfig getInstance (CA ca, ServerCertificate serverCertificate)
+    public static ServerConfig getInstance(CA ca, ServerCertificate serverCertificate)
             throws IOException {
         if (serverConfig == null) {
             serverConfig = new ServerConfig(ca, serverCertificate, null);
@@ -59,25 +54,15 @@ public class ServerConfig {
     }
 
 
-    public static ServerConfig getInstance () throws IOException {
-        if (serverConfig==null) {
+    public static ServerConfig getInstance() throws IOException {
+        if (serverConfig == null) {
             throw new IOException("Needs to be initialized with 'getInstance (CA ca, ServerCertificate serverCertificate, ServerCertificate signerCertificate)' first");
         }
         return serverConfig;
     }
 
 
-    private void putCerts (Map<String, String> target) {
-        target.put(Constants.ca, ca.getCaCertificatePEM());
-        try {
-            target.put(Constants.serverCert, serverCertificate.getServerCertificatePEM());
-        } catch (CertificateEncodingException | IOException e) {
-            logger.warn(e.getMessage());
-        }
-    }
-
-
-    private ArrayList<String> buildPossibleFileLocations (String filename) {
+    private ArrayList<String> buildPossibleFileLocations(String filename) {
         final ArrayList<String> fileLocations = new ArrayList<>();
         try {
             Resource configJsonFile = new ClassPathResource(filename);
@@ -92,23 +77,23 @@ public class ServerConfig {
         fileLocations.add(System.getProperty("user.home") + "/.crypt-fetch/" + filename);
         fileLocations.add("/etc/crypt-fetch/" + filename);
 
-        fileLocations.forEach((v)-> logger.info(String.format("buildPossibleFileLocations: %s", v)));
+        fileLocations.forEach((v) -> logger.info(String.format("buildPossibleFileLocations: %s", v)));
         return fileLocations;
     }
 
 
-    private File findConfigJson () {
+    private File findConfigJson() {
         final String configJson = "config.json";
         final ArrayList<String> fileLocations = buildPossibleFileLocations(configJson);
 
-        File[] result=new File[1];
+        File[] result = new File[1];
         fileLocations.forEach(v -> {
             File test = new File(v);
             if (test.exists()) {
                 result[0] = test;
             }
         });
-        if (result[0]!=null) {
+        if (result[0] != null) {
             return result[0];
         }
 
@@ -116,17 +101,14 @@ public class ServerConfig {
     }
 
 
-    private void putConfigJson (InputStream defaultConfig) throws IOException {
+    private void putConfigJson(InputStream defaultConfig) throws IOException {
         File fileLocation = findConfigJson();
-        if (fileLocation==null) {
+        if (fileLocation == null) {
             logger.info("config.json not found, using default config from classpath");
-            readConfigJson(defaultConfig);
+            readConfiguration(defaultConfig);
         } else {
             try (FileInputStream jsonConfigFile = new FileInputStream(fileLocation.getAbsoluteFile())) {
-                if (logger.isInfoEnabled()) {
-                    logger.info(String.format("config.json found at %s", fileLocation.getAbsolutePath()));
-                }
-                readConfigJson(jsonConfigFile);
+                readConfiguration(jsonConfigFile);
             } catch (IOException e) {
                 logger.error(e.getMessage());
             }
@@ -134,54 +116,53 @@ public class ServerConfig {
     }
 
 
-    private void readConfigJson (InputStream json) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<?, ?> map = objectMapper.readValue(json, Map.class);
-        Map<?, ?> root = (Map<?, ?>) map.get(CONFIG);
-        Map<? ,?> certs = (Map<?, ?>) root.get("remotekeystore");
-        putCerts(CheckedCast.castToMapOf(String.class, String.class, certs));
-        configuration.put(CONFIG, root);
-        logger.info("readConfigJson: Config set");
+    private void readConfiguration(InputStream json) throws IOException {
+        configuration = ConfigModel.deserialize(json);
+        HashMap<String,String> remotekeystore = configuration.getRemotekeystore();
+        remotekeystore.put(Constants.ca, ca.getCaCertificatePEM());
+        try {
+            remotekeystore.put(Constants.serverCert, serverCertificate.getServerCertificatePEM());
+        } catch (CertificateEncodingException | IOException e) {
+            logger.warn(e.getMessage());
+        }
+        configuration.setRemotekeystore(remotekeystore);
     }
 
 
-    public static ServerConfig getServerConfig () {
+    public static ServerConfig getServerConfig() {
 
         return serverConfig;
     }
 
 
-    public Map<String, Object> getConfig() {
+    public String getConfig()
+            throws JsonProcessingException {
 
-        return configuration;
+        return new String(configuration.serialize());
     }
 
-
-    public static Map<String, Object> createDefaultConfig () {
-        HashMap<String, Object> configRoot = new HashMap<>();
-        HashMap<String, Object> config = new HashMap<>();
-        HashMap<String, Object> keyAlg = new HashMap<>();
-        HashMap<String, Object> encAlg = new HashMap<>();
-        HashMap<String, String> remotekeystore = new HashMap<>();
-
-        keyAlg.put("hash", "SHA-256");
-        keyAlg.put("sign", "RSASSA-PKCS1-V1_5");
-        keyAlg.put("modulusLength", 2048);
-
-        encAlg.put("name", "AES-CBC");
-        encAlg.put("length", 256);
-
-        config.put("same_enc_sign_cert", true);
-        config.put("keyAlg", keyAlg);
-        config.put("encAlg", encAlg);
-        config.put("remotekeystore", remotekeystore);
-        config.put("authURL", "http://127.0.0.1:8080/login");
-        config.put("messageURL", "http://127.0.0.1:8080/message");
-        config.put("renewURL", "http://127.0.0.1:8080/renew");
-
-        configRoot.put(CONFIG, config);
-
-        return configRoot;
+    public static ConfigModel createDefaultConfig() throws IOException {
+        String json = "{\n" +
+                "  \"config\": {\n" +
+                "    \"same_enc_sign_cert\": true,\n" +
+                "    \"keyAlg\": {\n" +
+                "      \"hash\": \"SHA-256\",\n" +
+                "      \"sign\": \"RSASSA-PKCS1-V1_5\",\n" +
+                "      \"signDISABLED\": \"RSA-PSS\",\n" +
+                "      \"modulusLength\": 2048\n" +
+                "    },\n" +
+                "    \"encAlg\": {\n" +
+                "      \"name\": \"AES-CBC\",\n" +
+                "      \"length\": 256\n" +
+                "    },\n" +
+                "    \"remotekeystore\": {},\n" +
+                "    \"authURL\": \"http://127.0.0.1:8080/login\",\n" +
+                "    \"messageURL\": \"http://127.0.0.1:8080/message\",\n" +
+                "    \"renewURL\": \"http://127.0.0.1:8080/renew\"\n" +
+                "  }\n" +
+                "}";
+        InputStream jsonStream = new ByteArrayInputStream(json.getBytes());
+        return ConfigModel.deserialize(jsonStream);
     }
 
 }

@@ -1,22 +1,20 @@
 package net.felsing.cryptfetchspring.login;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.felsing.cryptfetchspring.CryptInit;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import net.felsing.cryptfetchspring.crypto.certs.ServerCertificate;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
-import net.felsing.cryptfetchspring.crypto.util.CheckedCast;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
@@ -32,12 +30,10 @@ public class Login implements LoginIntf {
     private static final String S_FALSE = Boolean.toString(false);
     private static final String S_TRUE = Boolean.toString(true);
     private static final String AUTHENTICATED = "authenticated";
-    private static final String USERNAME = "username";
-    private static final String PASSWORD = "password";
 
 
     public Login () {
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
         config = new Configuration();
     }
 
@@ -53,20 +49,8 @@ public class Login implements LoginIntf {
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
         try {
             byte[] decrypted = encryptAndDecrypt.decrypt(keyPair.getPrivate(), certificate, cms);
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            // credentials contains unvalidated, client provided data which may
-            // contain malicious content. First we do a type safe cast
-            HashMap<String, String> credentials = new HashMap<>(
-                    CheckedCast.castToMapOf(
-                        String.class,
-                        String.class,
-                        objectMapper.readValue(decrypted, HashMap.class)
-                    )
-            );
-
-            return execLogin(credentials);
-
+            LoginModel credentials = LoginModel.deserialize(decrypted);
+            return execLogin(credentials.getCredentials());
         } catch (IOException | CMSException e) {
             logger.error(e.getMessage());
             result.put(AUTHENTICATED, S_FALSE);
@@ -82,8 +66,8 @@ public class Login implements LoginIntf {
         HashMap<String, String> result = new HashMap<>();
 
         String username;
-        if (validate(USERNAME, credentials.get(USERNAME))) {
-            username = credentials.get(USERNAME);
+        if (validate(LoginModel.USERNAME, credentials.get(LoginModel.USERNAME))) {
+            username = credentials.get(LoginModel.USERNAME);
         } else {
             logger.warn("username validation failed");
             result.put(AUTHENTICATED, S_FALSE);
@@ -91,8 +75,8 @@ public class Login implements LoginIntf {
         }
 
         String password;
-        if (validate(PASSWORD, credentials.get(PASSWORD))) {
-            password = credentials.get(PASSWORD);
+        if (validate(LoginModel.PASSWORD, credentials.get(LoginModel.PASSWORD))) {
+            password = credentials.get(LoginModel.PASSWORD);
         } else {
             logger.warn("password validation failed");
             result.put(AUTHENTICATED, S_FALSE);
@@ -100,7 +84,7 @@ public class Login implements LoginIntf {
         }
 
         String pkcs10;
-        if (validate("csr", credentials.get("csr"))) {
+        if (validate(LoginModel.CSR, credentials.get(LoginModel.CSR))) {
             pkcs10 = credentials.get("csr");
         } else {
             logger.warn("csr validation failed");
@@ -138,7 +122,11 @@ public class Login implements LoginIntf {
         int days = Integer.parseInt(config.getConfig().getProperty("certificate.days"));
         signer.setValidTo(days);
         signer.setSubject(subject);
-        return signer.signClient(csr, CryptInit.getCa().getCaPrivateKeyPEM(), CryptInit.getCa().getCaCertificatePEM());
+        return signer.signClient(
+                csr,
+                CryptInit.getCa().getCaPrivateKeyPEM(),
+                CryptInit.getCa().getCaCertificatePEM()
+        );
     }
 
 
@@ -179,7 +167,7 @@ public class Login implements LoginIntf {
         }
 
         String pattern = valuePattern;
-        if (key.equals(PASSWORD)) {
+        if (key.equals(LoginModel.PASSWORD)) {
             pattern = passwordPattern;
         }
         if (key.equals("csr")) {

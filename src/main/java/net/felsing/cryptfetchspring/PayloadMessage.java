@@ -1,11 +1,11 @@
 package net.felsing.cryptfetchspring;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class PayloadMessage implements PayloadIntf {
@@ -19,14 +19,17 @@ public class PayloadMessage implements PayloadIntf {
     }
 
     @Override
-    public Map<String,String> doPayload (CmsSign.Result plainTextContent) {
+    public byte[] doPayload (CmsSign.Result plainTextContent) throws JsonProcessingException {
         if (logger.isInfoEnabled()) {
             logger.info(String.format("[doPayload] request: %s",
                     new String(plainTextContent.getContent(), StandardCharsets.UTF_8)));
         }
-        HashMap<String,String> plainTextResponse = new HashMap<>();
-        plainTextResponse.put("foo", "bar äöüÄÖÜß€");
-        return plainTextResponse;
+
+        PayloadModel payloadModel = new PayloadModel();
+        payloadModel.setaBoolean(true);
+        payloadModel.setaString("Made in Germany: äöüÄÖÜß€");
+        payloadModel.put("foo", "bar äöüÄÖÜß€");
+        return payloadModel.serialize();
     }
 
 }

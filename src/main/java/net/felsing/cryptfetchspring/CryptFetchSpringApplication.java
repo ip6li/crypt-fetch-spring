@@ -2,9 +2,7 @@ package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.CA;
-import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.login.Login;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -77,7 +75,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
 
 
     @GetMapping(value = "/config")
-    public Map<String, ?> getConfig() {
+    public String getConfig() throws JsonProcessingException {
         // Deliver server/ca certificate and urls for further operations
         return serverConfig.getConfig();
     }
@@ -99,7 +97,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
 
 
     @PostMapping(value = "/renew")
-    public String renew(@RequestBody String request) {
+    public String renew(@RequestBody String request) throws JsonProcessingException {
         MessageHandler messageHandler = MessageHandler.getInstance(
                 CryptInit.getServerCertificate().getServerKeyPair(),
                 CryptInit.getServerCertificate().getServerCertificate(),
@@ -111,18 +109,12 @@ public class CryptFetchSpringApplication implements ServletContextAware {
             logger.warn(String.format("renew: %s", e.getMessage()));
         }
 
-        String returnValue;
-        try {
-            returnValue = JsonUtils.map2json((Map<?, ?>) new HashMap<>().put(ERROR, "renew failed"));
-        } catch (JsonProcessingException e) {
-            returnValue = ERROR;
-        }
-        return returnValue;
+        return new String(new ErrorModel("renew failed").serialize());
     }
 
 
     @PostMapping(value = "/message")
-    public String message(@RequestBody String request) {
+    public String message(@RequestBody String request) throws JsonProcessingException {
         // Get encrypted request und put encrypted response
         MessageHandler messageHandler = MessageHandler.getInstance(
                 CryptInit.getServerCertificate().getServerKeyPair(),
@@ -135,13 +127,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
             logger.warn(String.format("message: %s", e.getMessage()));
         }
 
-        String returnValue;
-        try {
-            returnValue = JsonUtils.map2json((Map<?, ?>) new HashMap<>().put(ERROR, "message failed"));
-        } catch (JsonProcessingException e) {
-            returnValue = ERROR;
-        }
-        return returnValue;
+        return new String(new ErrorModel("message failed").serialize());
     }
 
 

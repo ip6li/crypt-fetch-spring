@@ -2,14 +2,13 @@ package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.*;
+import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
-import net.felsing.cryptfetchspring.crypto.util.JsonUtils;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -23,6 +22,8 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.*;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -181,10 +182,9 @@ class TestBasicFunctions {
     }
 
     @Test
-    void testDefaultConfig() throws JsonProcessingException {
-        final Map<String, Object> configMap = ServerConfig.createDefaultConfig();
-        final String configJson = JsonUtils.map2json(configMap);
-        assertTrue(configJson.length() > 0);
+    void testDefaultConfig() throws IOException {
+        final ConfigModel configMap = ServerConfig.createDefaultConfig();
+        assertTrue(configMap.getAuthURL().length() > 0);
     }
 
     private Certificates buildSelfSignedCertificate() {
@@ -218,18 +218,23 @@ class TestBasicFunctions {
     }
 
     @Test
-    void testGenErrorString() {
-        final String res = JsonUtils.genErrorString("test");
-        assertNotNull(res);
+    void testGenErrorString() throws JsonProcessingException {
+        final String msg = "foo";
+        final ErrorModel res = new ErrorModel(msg);
+        assertThat(res.get(), containsString(msg));
+        logger.info(String.format("testGenErrorString: %s", new String(res.serialize())));
+        assertThat(new String(res.serialize()), containsString(msg));
     }
 
     @Test
     void testSerialize() throws Exception {
         final TestClass testClass = new TestClass();
+
         testClass.setS1("blah");
         testClass.setS2("fasel");
-        final byte[] serialized = JsonUtils.serialize(testClass);
-        final TestClass deserialize = JsonUtils.deserialize(serialized);
+        final byte[] serialized = testClass.serializes();
+
+        final TestClass deserialize = TestClass.deserialize(serialized);
 
         assertNotNull(deserialize.getS1());
         assertNotNull(deserialize.getS2());
