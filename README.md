@@ -8,6 +8,11 @@ Spring Boot applications.
 This library uses X.509 client certificates, a well known and proven technology for
 encryption and signing.
 
+## How To Use
+
+First, you have to implement interface PayloadIntf in your own class.
+Second, you have to provide your new class at CryptFetchSpringApplication, method "message".
+
 # Usecases
 
 * Better protection for user credentials: Authentication is splitted from other functions and
@@ -24,7 +29,7 @@ But: Every request needs to be authorized by application, otherwise you applicat
 
 Where to find important files.
 
-## login
+## Login
 
 This package contains a Login class which must implement LoginIntf. It gets a CMS encrypted message
 from client which contains a JSON object with following attributes:

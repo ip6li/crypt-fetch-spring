@@ -11,6 +11,8 @@ import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import net.felsing.cryptfetchspring.login.LoginModel;
+import net.felsing.cryptfetchspring.models.PayloadDemoModel;
+import net.felsing.cryptfetchspring.models.RenewModel;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.junit.jupiter.api.BeforeAll;
@@ -155,10 +157,6 @@ class TestWebApplication {
         final boolean authenticated = Boolean.parseBoolean(respMap.getResp().get("authenticated"));
         final String certificate = respMap.getResp().get("certificate");
 
-        respMap.getResp().forEach((k, v)->{
-            logger.info(String.format("testLogin: %s: %s", k, v));
-        });
-
         assertTrue(authenticated);
         assertNotNull(certificate);
     }
@@ -203,11 +201,14 @@ class TestWebApplication {
             logger.info(String.format("[testMessage] response validated: %b", result.isVerifyOk()));
         }
 
-        logger.info(String.format("testMessage: %s", content));
-        final PayloadModel contentHashMap = PayloadModel.deserialize(result.getContent());
+        logger.info(String.format("[testMessage] %s", content));
+        final PayloadDemoModel payloadDemoModel = PayloadDemoModel.deserialize(result.getContent());
+        payloadDemoModel.getMapWithStrings().forEach((k, v)->{
+            logger.info(String.format("[testMessage] %s: %s", k, v));
+        });
 
-        assertTrue(contentHashMap.getMapWithStrings().containsKey("foo"));
-        assertTrue(contentHashMap.getMapWithStrings().containsValue("bar äöüÄÖÜß€"));
+        assertTrue(payloadDemoModel.getMapWithStrings().containsKey("foo"));
+        assertTrue(payloadDemoModel.getMapWithStrings().containsValue("bar äöüÄÖÜß€"));
         assertTrue(result.isVerifyOk());
     }
 
@@ -230,7 +231,6 @@ class TestWebApplication {
         final byte[] decryptedText = decrypt(csr.getKeyPair().getPrivate(), clientCert, response);
         final CmsSign.Result result = validate(decryptedText);
 
-        logger.info(new String(result.getContent()));
         final RenewModel resultMap = RenewModel.deserialize(result.getContent());
 
         final String newCertPEM = resultMap.getCertificate();

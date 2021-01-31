@@ -1,24 +1,23 @@
-package net.felsing.cryptfetchspring;
+package net.felsing.cryptfetchspring.models;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.felsing.cryptfetchspring.login.LoginModel;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 
 @JsonRootName(value = "data")
-public class PayloadModel {
-    private HashMap<String, String> mapWithStrings = new HashMap<>();
+public class PayloadDemoModel implements PayloadModelIntf {
+    private Map<String, String> mapWithStrings = new HashMap<>();
     private boolean aBoolean;
     private String aString;
 
-    public PayloadModel() {}
-
-    public PayloadModel (
-        @JsonProperty("mapWithStrings") HashMap<String,String> mapWithStrings,
+    public PayloadDemoModel(
+        @JsonProperty("mapWithStrings") Map<String,String> mapWithStrings,
         @JsonProperty("aBoolean") boolean  aBoolean,
         @JsonProperty("aString") String aString
     ) {
@@ -29,7 +28,8 @@ public class PayloadModel {
 
     public void put (String k, String v) { mapWithStrings.put(k, v); }
 
-    public boolean isaBoolean() {
+    @JsonGetter
+    public boolean getaBoolean() {
         return aBoolean;
     }
 
@@ -37,6 +37,7 @@ public class PayloadModel {
         this.aBoolean = aBoolean;
     }
 
+    @JsonGetter
     public String getaString() {
         return aString;
     }
@@ -45,21 +46,23 @@ public class PayloadModel {
         this.aString = aString;
     }
 
-    public HashMap<String, String> getMapWithStrings() {
+    @JsonGetter
+    public Map<String, String> getMapWithStrings() {
         return mapWithStrings;
     }
 
-    public void setMapWithStrings(HashMap<String, String> mapWithStrings) {
+    public void setMapWithStrings(Map<String, String> mapWithStrings) {
         this.mapWithStrings = mapWithStrings;
     }
 
+    @Override
     public byte[] serialize() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.writeValueAsString(this).getBytes(StandardCharsets.UTF_8);
     }
 
-    public static PayloadModel deserialize(byte[] json) throws JsonProcessingException {
+    public static PayloadDemoModel deserialize(byte[] json) throws JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
-        return om.readerFor(PayloadModel.class).readValue(new String(json));
+        return om.readerFor(PayloadDemoModel.class).readValue(new String(json));
     }
 }

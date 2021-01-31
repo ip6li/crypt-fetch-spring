@@ -1,6 +1,7 @@
 package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import net.felsing.cryptfetchspring.models.RenewModel;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class TestRenewModel {
+class TestRenewModel {
     Logger logger = LoggerFactory.getLogger(TestConfigModel.class);
 
     @Test

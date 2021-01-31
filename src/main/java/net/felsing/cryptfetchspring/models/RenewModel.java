@@ -1,4 +1,4 @@
-package net.felsing.cryptfetchspring;
+package net.felsing.cryptfetchspring.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 
 
 @JsonRootName(value = "RenewModel")
-public class RenewModel {
+public class RenewModel implements PayloadModelIntf {
     private final String certificate;
 
     @JsonCreator
@@ -21,6 +21,7 @@ public class RenewModel {
 
     public String getCertificate () { return certificate; }
 
+    @Override
     public byte[] serialize() throws JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
         return om.writeValueAsString(this).getBytes(StandardCharsets.UTF_8);

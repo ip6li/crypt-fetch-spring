@@ -2,6 +2,7 @@ package net.felsing.cryptfetchspring;
 
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
+import net.felsing.cryptfetchspring.models.ErrorModel;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.operator.OperatorCreationException;

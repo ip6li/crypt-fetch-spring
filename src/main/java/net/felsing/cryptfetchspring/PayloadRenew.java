@@ -5,6 +5,8 @@ import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+import net.felsing.cryptfetchspring.models.ErrorModel;
+import net.felsing.cryptfetchspring.models.RenewModel;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +71,6 @@ public class PayloadRenew implements PayloadIntf {
             return errorModel.serialize();
         }
 
-        //HashMap<String, String> renewResult = new HashMap<>();
-        //renewResult.put("certificate", signedClientCert);
         RenewModel renewResult = new RenewModel(signedClientCert);
 
         return renewResult.serialize();
