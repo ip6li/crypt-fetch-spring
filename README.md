@@ -57,7 +57,7 @@ must be set to your server.
  
     cd target/
     cp ../src/main/resources/config.json .
-    mvn clean package spring-boot:repackage
+    gradle build
     java -jar crypt-fetch-spring-0.0.2-SNAPSHOT.jar 
  
 # Security Considerations
@@ -72,14 +72,6 @@ authenticated. For a production deployment you should consider using a central P
 throwaway certificates.
 
 Please be aware of that authorization of request is not in scope of this PoC.
-
-## Dependencies
-
-Maven pom.xml contains a dependency checker (OWASP). To check dependencies, use
-
-    mvn verify
-
-which should provide possible vulnerabilities in dependencies.
 
 # Status
 
