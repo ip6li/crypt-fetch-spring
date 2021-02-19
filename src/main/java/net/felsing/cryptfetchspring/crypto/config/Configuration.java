@@ -36,15 +36,16 @@ public final class Configuration extends ConfigurationBase {
 
     @Override
     protected void init() {
+        final int oneYear = 365;
         config.setProperty("js.url", readFromVMoptions("url", "index"));
         config.setProperty("js.hash", "SHA-256");
 
-        config.setProperty("keyStorePassword", "changeit");
+        config.setProperty("keyStorePassword", getKeystoreDefaultPassword());
         config.setProperty("ca.dnSuffix", "O=Honest Achmed,OU=Used Cars,C=DE");
         config.setProperty("ca.dnPrefix", "CN=Honest Achmets trustworthy CA");
-        config.setProperty("ca.days", Long.toString(30L * 365L));
-        config.setProperty("server.days", Integer.toString(10 * 365));
-        config.setProperty("signer.days", Integer.toString(10 * 365));
+        config.setProperty("ca.days", Long.toString(30L * oneYear));
+        config.setProperty("server.days", Integer.toString(10 * oneYear));
+        config.setProperty("signer.days", Integer.toString(10 * oneYear));
         config.setProperty("certificate.days", Integer.toString(1));
 
         // use either RSA or ECDSA

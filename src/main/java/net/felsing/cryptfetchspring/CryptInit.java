@@ -132,7 +132,7 @@ public class CryptInit {
     private static void loadServerCertificate ()
             throws URISyntaxException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         String serverKeyStoreFile = URL.urlToPath(servletRootPath, properties.getProperty(Constants.p_serverKeystoreFile));
-        String serverKeyStorePassword = properties.getProperty(Constants.p_serverKeystorePassword);
+        String serverKeyStorePassword = properties.getProperty(Constants.d_serverKeystorePassword);
 
         serverCertificate = new ServerCertificate();
         loadCertificate(serverCertificate, serverKeyStoreFile, serverKeyStorePassword);
@@ -142,7 +142,7 @@ public class CryptInit {
     private static void loadSignerCertificate ()
             throws URISyntaxException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         String signerKeyStoreFile = URL.urlToPath(servletRootPath, properties.getProperty(Constants.p_signerKeystoreFile));
-        String signerKeyStorePassword = properties.getProperty(Constants.p_signerKeystorePassword);
+        String signerKeyStorePassword = properties.getProperty(Constants.d_signerKeystorePassword);
 
         serverSignerCertificate = new ServerCertificate();
         loadCertificate(serverSignerCertificate, signerKeyStoreFile, signerKeyStorePassword);

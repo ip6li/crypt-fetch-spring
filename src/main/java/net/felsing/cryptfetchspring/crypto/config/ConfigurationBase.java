@@ -19,6 +19,13 @@ package net.felsing.cryptfetchspring.crypto.config;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 
@@ -26,12 +33,23 @@ public abstract class ConfigurationBase {
     private static final Logger logger = LoggerFactory.getLogger(ConfigurationBase.class);
 
     protected static final Properties config = new Properties();
+    private final String keystoreDefaultPassword;
 
     private static final boolean BCFIPS = Boolean.parseBoolean(readFromVMoptions("bcfips", "false"));
 
 
     ConfigurationBase() {
+        String tmpPassword;
+        try {
+            Properties properties = loadDefaultsIni();
+            tmpPassword = properties.getProperty("keystorePassword");
+            logger.info(String.format("ConfigurationBase: %s", tmpPassword));
+        } catch (IOException e) {
+            logger.error(String.format("ConfigurationBase: %s", e.getMessage()));
+            tmpPassword = null;
+        }
 
+        keystoreDefaultPassword = tmpPassword;
         if (config.isEmpty()) {
             preInit();
             init();
@@ -40,19 +58,40 @@ public abstract class ConfigurationBase {
 
     /**
      * Get config as Properties object
+     *
      * @return (Properties) :   Config
      */
-    public Properties getConfig () {
+    public Properties getConfig() {
 
         return config;
+    }
+
+
+    protected String getKeystoreDefaultPassword() {
+
+        return keystoreDefaultPassword;
+    }
+
+
+    private Properties loadDefaultsIni() throws IOException {
+        final String filename = "defaults.ini";
+        Properties prop = new Properties();
+
+        Resource configJsonFile = new ClassPathResource(filename);
+        File f = configJsonFile.getFile();
+
+        try (InputStream input = new FileInputStream(f)) {
+            prop.load(input);
+            return prop;
+        }
     }
 
 
     static String readFromVMoptions(String key, String defaultValue) {
         StringBuilder sb = new StringBuilder();
         String value = System.getProperty(key);
-        if (value==null) {
-            value=defaultValue;
+        if (value == null) {
+            value = defaultValue;
             sb.append("==> ").append(key).append(" is null -> set to ").append(value);
         } else {
             sb.append("==> ").append(key).append(" set to ").append(value);
@@ -73,7 +112,7 @@ public abstract class ConfigurationBase {
         }
 
         String isFips = config.getProperty("bc");
-        if (isFips!=null) {
+        if (isFips != null) {
             config.setProperty("js.fips",
                     Boolean.toString(
                             isFips.matches(
@@ -90,10 +129,10 @@ public abstract class ConfigurationBase {
                 )
         );
 
-        config.setProperty(Constants.p_serverKeystorePassword,
+        config.setProperty(Constants.d_serverKeystorePassword,
                 readFromVMoptions(
                         Constants.d_serverKeystorePassword,
-                        "changeit"
+                        keystoreDefaultPassword
                 )
         );
 
@@ -104,16 +143,16 @@ public abstract class ConfigurationBase {
                 )
         );
 
-        config.setProperty(Constants.p_signerKeystorePassword,
+        config.setProperty(Constants.d_signerKeystorePassword,
                 readFromVMoptions(
                         Constants.d_signerKeystorePassword,
-                        "changeit"
+                        keystoreDefaultPassword
                 )
         );
 
     }
 
 
-    protected abstract void init ();
+    protected abstract void init();
 
 } // class

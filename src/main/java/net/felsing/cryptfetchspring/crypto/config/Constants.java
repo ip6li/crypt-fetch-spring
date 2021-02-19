@@ -45,9 +45,7 @@ public final class Constants {
 
     // properties
     public static final String p_serverKeystoreFile = "servercert.keystore.file";
-    public static final String p_serverKeystorePassword = "changeit";
     public static final String p_signerKeystoreFile = "signercert.keystore.file";
-    public static final String p_signerKeystorePassword = "changeit";
 
     // -D parameters
     public static final String d_serverKeystorePassword = "serverKeystorePassword";

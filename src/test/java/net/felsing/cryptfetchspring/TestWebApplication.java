@@ -15,6 +15,7 @@ import net.felsing.cryptfetchspring.models.PayloadDemoModel;
 import net.felsing.cryptfetchspring.models.RenewModel;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -102,21 +103,12 @@ class TestWebApplication {
     }
 
 
-    /*
     @AfterAll
     static void cleanUp () throws IOException {
         File filePkiPath = new File(TestLib.pkiPath);
         if (!TestLib.deleteDirectory(filePkiPath)) {
             throw new IOException(String.format("Cannot delete dir %s", TestLib.pkiPath));
         }
-    }
-    */
-
-
-    @Test
-    void contextLoads() {
-
-        assertNotNull (controller);
     }
 
 
