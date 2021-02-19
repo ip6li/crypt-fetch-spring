@@ -66,8 +66,8 @@ public class Login implements LoginIntf {
         HashMap<String, String> result = new HashMap<>();
 
         String username;
-        if (validate(LoginModel.USERNAME, credentials.get(LoginModel.USERNAME))) {
-            username = credentials.get(LoginModel.USERNAME);
+        if (validate(LoginModel.FIELD_USERNAME, credentials.get(LoginModel.FIELD_USERNAME))) {
+            username = credentials.get(LoginModel.FIELD_USERNAME);
         } else {
             logger.warn("username validation failed");
             result.put(AUTHENTICATED, S_FALSE);
@@ -75,8 +75,8 @@ public class Login implements LoginIntf {
         }
 
         String password;
-        if (validate(LoginModel.PASSWORD, credentials.get(LoginModel.PASSWORD))) {
-            password = credentials.get(LoginModel.PASSWORD);
+        if (validate(LoginModel.FIELD_PASSWORD, credentials.get(LoginModel.FIELD_PASSWORD))) {
+            password = credentials.get(LoginModel.FIELD_PASSWORD);
         } else {
             logger.warn("password validation failed");
             result.put(AUTHENTICATED, S_FALSE);
@@ -84,7 +84,7 @@ public class Login implements LoginIntf {
         }
 
         String pkcs10;
-        if (validate(LoginModel.CSR, credentials.get(LoginModel.CSR))) {
+        if (validate(LoginModel.FIELD_CSR, credentials.get(LoginModel.FIELD_CSR))) {
             pkcs10 = credentials.get("csr");
         } else {
             logger.warn("csr validation failed");
@@ -167,7 +167,7 @@ public class Login implements LoginIntf {
         }
 
         String pattern = valuePattern;
-        if (key.equals(LoginModel.PASSWORD)) {
+        if (key.equals(LoginModel.FIELD_PASSWORD)) {
             pattern = passwordPattern;
         }
         if (key.equals("csr")) {

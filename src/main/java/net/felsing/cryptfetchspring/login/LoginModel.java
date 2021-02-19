@@ -10,20 +10,20 @@ import java.util.HashMap;
 
 @JsonRootName(value = "credentials")
 public class LoginModel {
-    public static final String USERNAME = "username";
-    public static final String PASSWORD = "password";
-    public static final String CSR = "csr";
+    public static final String FIELD_USERNAME = "username";
+    public static final String FIELD_PASSWORD = "password";
+    public static final String FIELD_CSR = "csr";
 
     private final HashMap<String, String> credentials = new HashMap<>();
 
     public LoginModel(
-            @JsonProperty("username") String username,
-            @JsonProperty("password") String password,
+            @JsonProperty(FIELD_USERNAME) String username,
+            @JsonProperty(FIELD_PASSWORD) String password,
             @JsonProperty("csr") String csr
     ) {
-        credentials.put(USERNAME, username);
-        credentials.put(PASSWORD, password);
-        credentials.put(CSR, csr);
+        credentials.put(FIELD_USERNAME, username);
+        credentials.put(FIELD_PASSWORD, password);
+        credentials.put(FIELD_CSR, csr);
     }
 
     public HashMap<String, String> getCredentials() { return credentials; }

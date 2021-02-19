@@ -270,16 +270,16 @@ public final class PemUtils {
         ByteArrayInputStream pemStream;
         pemStream = new ByteArrayInputStream(pem);
 
-        Reader pemReader = new BufferedReader(new InputStreamReader(pemStream));
-        PEMParser pemParser = new PEMParser(pemReader);
+        try(Reader pemReader = new BufferedReader(new InputStreamReader(pemStream))) {
+            PEMParser pemParser = new PEMParser(pemReader);
+            Object parsedObj = pemParser.readObject();
 
-        Object parsedObj = pemParser.readObject();
+            if (parsedObj instanceof PKCS10CertificationRequest) {
+                csr = (PKCS10CertificationRequest) parsedObj;
+            }
 
-        if (parsedObj instanceof PKCS10CertificationRequest) {
-            csr = (PKCS10CertificationRequest) parsedObj;
+            return csr;
         }
-
-        return csr;
     }
 
 } // class
