@@ -8,8 +8,11 @@ import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import net.felsing.cryptfetchspring.models.ErrorModel;
 import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -17,10 +20,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -47,7 +55,6 @@ class TestBasicFunctions {
         config = new Configuration();
     }
 
-    /*
     @AfterAll
     static void cleanUp () throws IOException {
         File filePkiPath = new File(TestLib.pkiPath);
@@ -55,7 +62,6 @@ class TestBasicFunctions {
             throw new IOException(String.format("Cannot delete dir %s", TestLib.pkiPath));
         }
     }
-    */
 
     @Test
     void testServerConfig() {
@@ -90,7 +96,9 @@ class TestBasicFunctions {
 
     @Test
     void cmsSign()
-            throws Exception {
+            throws CertificateException, InvalidKeySpecException, NoSuchAlgorithmException,
+            OperatorCreationException, NoSuchProviderException, InvalidAlgorithmParameterException,
+            IOException, CMSException {
         final HashMap<String, String> clientCert = testLib.genClientCertificate("cert1");
 
         final String plainText = "Hello world! Umlaute: äöüÄÖÜß€";

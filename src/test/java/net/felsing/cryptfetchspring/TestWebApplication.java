@@ -43,8 +43,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TestWebApplication {
     private static final Logger logger = LoggerFactory.getLogger(TestWebApplication.class);
 
+    private static final String CERTIFICATE = "certificate";
+    private static final String AUTHENTICATED = "authenticated";
     private static TestLib testLib;
-    private static String config=null;
     private static String ca=null;
     private static X509Certificate serverCertificate=null;
 
@@ -53,19 +54,17 @@ class TestWebApplication {
 
     @Autowired
     private TestRestTemplate restTemplate;
-    @Autowired
-    private CryptFetchSpringApplication controller;
 
     @JsonRootName(value = "loginresponse")
     private static class LoginResponse {
         private final HashMap<String, String> resp = new HashMap<>();
 
         public LoginResponse (
-                @JsonProperty("authenticated") boolean authenticated,
-                @JsonProperty("certificate") String certificate
+                @JsonProperty(AUTHENTICATED) boolean authenticated,
+                @JsonProperty(CERTIFICATE) String certificate
         ) {
-            resp.put("authenticated", Boolean.toString(authenticated));
-            resp.put("certificate", certificate);
+            resp.put(AUTHENTICATED, Boolean.toString(authenticated));
+            resp.put(CERTIFICATE, certificate);
         }
 
         @JsonGetter
@@ -81,7 +80,7 @@ class TestWebApplication {
     private void loadConfig2 ()
             throws IOException, CertificateException {
         final String url = String.format("http://localhost:%d/config", port);
-        config = restTemplate.getForObject(url, String.class);
+        String config = restTemplate.getForObject(url, String.class);
         InputStream targetStream = new ByteArrayInputStream(config.getBytes());
         ConfigModel configModel = ConfigModel.deserialize(targetStream);
         HashMap<String, String> remotekeystore = configModel.getRemotekeystore();
@@ -195,9 +194,9 @@ class TestWebApplication {
 
         logger.info(String.format("[testMessage] %s", content));
         final PayloadDemoModel payloadDemoModel = PayloadDemoModel.deserialize(result.getContent());
-        payloadDemoModel.getMapWithStrings().forEach((k, v)->{
-            logger.info(String.format("[testMessage] %s: %s", k, v));
-        });
+        payloadDemoModel.getMapWithStrings().forEach((k, v)->
+                logger.info(String.format("[testMessage] %s: %s", k, v))
+        );
 
         assertTrue(payloadDemoModel.getMapWithStrings().containsKey("foo"));
         assertTrue(payloadDemoModel.getMapWithStrings().containsValue("bar äöüÄÖÜß€"));

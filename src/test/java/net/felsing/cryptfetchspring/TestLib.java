@@ -6,11 +6,17 @@ import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 
 
@@ -22,7 +28,11 @@ public class TestLib {
     private static TestLib testLib;
     private final Configuration config;
 
-    private TestLib(String caRootPath) throws Exception {
+    private TestLib(String caRootPath)
+            throws IOException, CertificateException, NoSuchAlgorithmException,
+            UnrecoverableKeyException, InvalidAlgorithmParameterException,
+            URISyntaxException, NoSuchProviderException, OperatorCreationException,
+            KeyStoreException {
         logger.debug("TestLib initialized");
         ca = CryptInit.getInstance(caRootPath);
         logger.info(String.format("caRootPath: %s", caRootPath));
@@ -32,7 +42,10 @@ public class TestLib {
     }
 
 
-    public static TestLib getInstance(String caRootPath) throws Exception {
+    public static TestLib getInstance(String caRootPath)
+            throws IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException,
+            KeyStoreException, InvalidAlgorithmParameterException, NoSuchProviderException,
+            OperatorCreationException, URISyntaxException {
 
         if (testLib == null) {
             testLib = new TestLib(caRootPath);
@@ -42,14 +55,18 @@ public class TestLib {
     }
 
 
-    public Csr genCsr(String dn) throws Exception {
+    public Csr genCsr(String dn)
+            throws OperatorCreationException, InvalidAlgorithmParameterException,
+            NoSuchAlgorithmException, NoSuchProviderException, IOException {
         Csr request = new Csr();
         request.createCsr(Constants.KeyType.RSA, "CN=".concat(dn));
         return request;
     }
 
 
-    public HashMap<String, String> genClientCertificate(String cn) throws Exception {
+    public HashMap<String, String> genClientCertificate(String cn)
+            throws OperatorCreationException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
+            NoSuchProviderException, IOException, CertificateException, InvalidKeySpecException {
         HashMap<String, String> certStore = new HashMap<>();
         Csr request = new Csr();
 

@@ -43,7 +43,6 @@ public abstract class ConfigurationBase {
         try {
             Properties properties = loadDefaultsIni();
             tmpPassword = properties.getProperty("keystorePassword");
-            logger.info(String.format("ConfigurationBase: %s", tmpPassword));
         } catch (IOException e) {
             logger.error(String.format("ConfigurationBase: %s", e.getMessage()));
             tmpPassword = null;
