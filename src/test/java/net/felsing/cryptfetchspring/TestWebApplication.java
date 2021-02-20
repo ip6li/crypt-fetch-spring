@@ -102,15 +102,6 @@ class TestWebApplication {
     }
 
 
-    @AfterAll
-    static void cleanUp () throws IOException {
-        File filePkiPath = new File(TestLib.pkiPath);
-        if (!TestLib.deleteDirectory(filePkiPath)) {
-            throw new IOException(String.format("Cannot delete dir %s", TestLib.pkiPath));
-        }
-    }
-
-
     @Test
     void testGetRoot() {
         final String url = "http://localhost:" + port + "/";
