@@ -82,6 +82,12 @@ public class CryptFetchSpringApplication implements ServletContextAware {
     }
 
 
+    @PostMapping(value = "/config")
+    public String getConfigPost() throws JsonProcessingException {
+        // Deliver server/ca certificate and urls for further operations
+        return serverConfig.getConfig();
+    }
+
     @PostMapping(value = "/login")
     public Map<String, String> login(@RequestBody String request) {
         // getCSR, verify credentials, if ok: sign CSR and return client certificate
