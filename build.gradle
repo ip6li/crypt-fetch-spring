@@ -39,6 +39,8 @@ dependencies {
     }
     implementation 'commons-io:commons-io:2.8.0'
     implementation 'net.klakegg.pkix:pkix-ocsp:0.9.1'
+    // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
+    implementation group: 'org.hibernate.validator', name: 'hibernate-validator', version: '6.2.0.Final'
 
     // Use JUnit Jupiter API for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
