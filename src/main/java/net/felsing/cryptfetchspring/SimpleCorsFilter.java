@@ -29,7 +29,9 @@ public class SimpleCorsFilter implements Filter {
 
         @URL
         String url = request.getHeader("Origin");
-
+        if (url != null) {
+            url = url.replaceAll("(\\r|\\n)", "");
+        }
         response.setHeader("Access-Control-Allow-Origin", url);
         response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
