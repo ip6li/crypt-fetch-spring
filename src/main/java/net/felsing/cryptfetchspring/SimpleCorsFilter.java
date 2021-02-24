@@ -31,6 +31,8 @@ public class SimpleCorsFilter implements Filter {
         String url = request.getHeader("Origin");
         if (url != null) {
             url = url.replaceAll("(\\r|\\n)", "");
+        } else {
+            url = "http://localhost:8080";
         }
         response.setHeader("Access-Control-Allow-Origin", url);
         response.setHeader("Access-Control-Allow-Credentials", "true");
