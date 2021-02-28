@@ -73,8 +73,9 @@ public final class CmsSign {
             throws CertificateEncodingException, OperatorCreationException, CMSException {
 
         String signatureAlgorithm = cert.getSigAlgName();
+        logger.info(String.format("signCms1: %s", signatureAlgorithm));
         if (signatureAlgorithm.matches("RSASSA-PSS")) { signatureAlgorithm = "SHA256withRSAandMGF1"; }
-        logger.info(String.format("signCms: %s", signatureAlgorithm));
+        logger.info(String.format("signCms2: %s", signatureAlgorithm));
 
         List<X509Certificate> certList = new ArrayList<>();
 
@@ -177,7 +178,7 @@ public final class CmsSign {
             trustStore.forEach(k -> {
                 try {
                     ks.setCertificateEntry(k.getSubjectDN().getName(), k);
-                    logger.info(String.format("validateChain (trsutStore)\n%s", PemUtils.encodeObjectToPEM(k)));
+                    logger.info(String.format("validateChain (trustStore)\n%s", PemUtils.encodeObjectToPEM(k)));
                 } catch (Exception e) {
                     verifyOk[0] = false;
                     logger.warn(String.format("validateChain: Cannot add CA certificate to trustchain: %s", e.getMessage()));
@@ -199,7 +200,9 @@ public final class CmsSign {
             params.addCertStore(builder.build());
             params.setRevocationEnabled(false);
             params.getSigProvider();
-            CertPathBuilder cpBuilder = CertPathBuilder.getInstance("PKIX", ProviderLoader.getProviderName());
+            // ToDo: is this a Bouncy Castle problem? I don't know...
+            //CertPathBuilder cpBuilder = CertPathBuilder.getInstance("PKIX", ProviderLoader.getProviderName());
+            CertPathBuilder cpBuilder = CertPathBuilder.getInstance("PKIX");
             cpBuilder.build(params);
         } catch (Exception e) {
             verifyOk[0] = false;
@@ -209,40 +212,4 @@ public final class CmsSign {
         return verifyOk[0];
     }
 
-
-    private static PKIXCertPathBuilderResult verifyCertificate(X509Certificate cert,
-                                                               Set<X509Certificate> trustedRootCerts,
-                                                               Set<X509Certificate> intermediateCerts)
-            throws GeneralSecurityException {
-
-        // Create the selector that specifies the starting certificate
-        X509CertSelector selector = new X509CertSelector();
-        selector.setCertificate(cert);
-
-        // Create the trust anchors (set of root CA certificates)
-        Set<TrustAnchor> trustAnchors = new HashSet<>();
-        for (X509Certificate trustedRootCert : trustedRootCerts) {
-            trustAnchors.add(new TrustAnchor(trustedRootCert, null));
-        }
-
-        // Configure the PKIX certificate builder algorithm parameters
-        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-
-        PKIXBuilderParameters pkixParams =
-                new PKIXBuilderParameters(trustAnchors, selector);
-
-
-        // Disable CRL checks (this is done manually as additional step)
-        pkixParams.setRevocationEnabled(false);
-
-        // Specify a list of intermediate certificates
-        CertStore certStore = CertStore.getInstance("Collection",
-                new CollectionCertStoreParameters(trustedRootCerts));
-        pkixParams.addCertStore(certStore);
-
-        // Build and verify the certification chain
-        CertPathBuilder builder = CertPathBuilder.getInstance("PKIX");
-        return (PKIXCertPathBuilderResult) builder.build(pkixParams);
-    }
-    
 } // class

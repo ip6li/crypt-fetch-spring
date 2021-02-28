@@ -81,9 +81,7 @@ public class CryptInit {
 
         Constants.KeyType mode = Constants.KeyType.valueOf(properties.getProperty("keyMode"));
 
-
         logger.info(String.format("generating new certificate: %s", serverKeyStoreFile));
-
 
         File f = new File(serverKeyStoreFile);
         if (f.exists()) {

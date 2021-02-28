@@ -9,7 +9,9 @@ import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
+import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import net.felsing.cryptfetchspring.login.LoginModel;
 import net.felsing.cryptfetchspring.models.PayloadDemoModel;
@@ -19,8 +21,6 @@ import org.bouncycastle.cms.CMSSignedData;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -42,13 +42,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = CryptFetchSpringApplication.class)
 class TestWebApplication {
-    private static final Logger logger = LoggerFactory.getLogger(TestWebApplication.class);
+    private static final LogEngine logger = LogEngine.getLogger(TestWebApplication.class);
 
     private static final String CERTIFICATE = "certificate";
     private static final String AUTHENTICATED = "authenticated";
     private static TestLib testLib;
-    private static String ca=null;
-    private static X509Certificate serverCertificate=null;
+    private static String ca = null;
+    private static X509Certificate serverCertificate = null;
 
     @LocalServerPort
     private int port;
@@ -60,7 +60,7 @@ class TestWebApplication {
     private static class LoginResponse {
         private final HashMap<String, String> resp = new HashMap<>();
 
-        public LoginResponse (
+        public LoginResponse(
                 @JsonProperty(AUTHENTICATED) boolean authenticated,
                 @JsonProperty(CERTIFICATE) String certificate
         ) {
@@ -69,7 +69,9 @@ class TestWebApplication {
         }
 
         @JsonGetter
-        public HashMap<String, String> getResp() { return resp; }
+        public HashMap<String, String> getResp() {
+            return resp;
+        }
 
         public static LoginResponse deserialize(String json) throws JsonProcessingException {
             ObjectMapper om = new ObjectMapper();
@@ -78,7 +80,7 @@ class TestWebApplication {
     }
 
 
-    private void loadConfig2 ()
+    private void loadConfig2()
             throws IOException, CertificateException {
         final String url = String.format("http://localhost:%d/config", port);
         String config = restTemplate.getForObject(url, String.class);
@@ -92,7 +94,7 @@ class TestWebApplication {
 
 
     @BeforeAll
-    static void initTests () throws Exception {
+    static void initTests() throws Exception {
         File filePkiPath = new File(TestLib.pkiPath);
         if (!filePkiPath.isDirectory()) {
             if (!filePkiPath.mkdir()) {
@@ -100,6 +102,15 @@ class TestWebApplication {
             }
         }
         testLib = TestLib.getInstance(TestLib.pkiPath);
+    }
+
+
+    @AfterAll
+    static void cleanUp () throws IOException {
+        File filePkiPath = new File(TestLib.pkiPath);
+        if (!TestLib.deleteDirectory(filePkiPath)) {
+            throw new IOException(String.format("Cannot delete dir %s", TestLib.pkiPath));
+        }
     }
 
 
@@ -111,8 +122,8 @@ class TestWebApplication {
     }
 
 
-    private LoginResponse login (String username, String password, String pemCsr)
-        throws Exception {
+    private LoginResponse login(String username, String password, String pemCsr)
+            throws Exception {
         final String url = String.format("http://localhost:%d/login", port);
 
         final LoginModel loginModel = new LoginModel(username, password, pemCsr);
@@ -127,12 +138,18 @@ class TestWebApplication {
 
 
     @Test
-    void testLogin () throws Exception {
+    void testLogin() throws Exception {
         loadConfig2();
 
         final String username = "myUserName";
         final String password = "myPassword";
-        final Csr csr = testLib.genCsr(Constants.KeyType.RSA, "CN=cert1");
+
+        Configuration configuration = new Configuration();
+        final Csr csr = testLib.genCsr(
+                Constants.KeyType.valueOf(configuration.getConfig().getProperty("keyMode")),
+                "CN=cert1"
+        );
+        logger.info(String.format("testLogin\n%s", csr.getCsrPEM()));
         final String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
 
         final LoginResponse respMap = login(username, password, pemCsr);
@@ -145,7 +162,7 @@ class TestWebApplication {
     }
 
 
-    private String doMessage (String path, KeyPair senderKeyPair, X509Certificate senderCert, byte[] message)
+    private String doMessage(String path, KeyPair senderKeyPair, X509Certificate senderCert, byte[] message)
             throws Exception {
         final String url = String.format("http://localhost:%d%s", port, path);
         final EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
@@ -160,10 +177,16 @@ class TestWebApplication {
     }
 
     @Test
-    void testMessage () throws Exception {
+    void testMessage() throws Exception {
         final String username = "myUsername2";
         final String password = "myPassword2";
-        final Csr csr = testLib.genCsr(Constants.KeyType.RSA, "CN=cert2");
+
+        Configuration configuration = new Configuration();
+        final Csr csr = testLib.genCsr(
+                Constants.KeyType.valueOf(configuration.getConfig().getProperty("keyMode")),
+                "CN=cert2"
+        );
+
         final String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
 
         final String plainTextSend = "Hello world! Umlaute: äöüÄÖÜß€";
@@ -179,14 +202,12 @@ class TestWebApplication {
         final CmsSign.Result result = validate(decryptedResponse);
 
         final String content = new String(result.getContent());
-        if (logger.isInfoEnabled()) {
-            logger.info(String.format("[testMessage] response content: %s", content));
-            logger.info(String.format("[testMessage] response validated: %b", result.isVerifyOk()));
-        }
 
+        logger.info(String.format("[testMessage] response content: %s", content));
+        logger.info(String.format("[testMessage] response validated: %b", result.isVerifyOk()));
         logger.info(String.format("[testMessage] %s", content));
         final PayloadDemoModel payloadDemoModel = PayloadDemoModel.deserialize(result.getContent());
-        payloadDemoModel.getMapWithStrings().forEach((k, v)->
+        payloadDemoModel.getMapWithStrings().forEach((k, v) ->
                 logger.info(String.format("[testMessage] %s: %s", k, v))
         );
 
@@ -197,12 +218,17 @@ class TestWebApplication {
 
 
     @Test
-    void testRenew () throws Exception {
+    void testRenew() throws Exception {
         final String username = "myUsername3";
         final String password = "myPassword3";
 
         // Build a valid certificate
-        final Csr csr = testLib.genCsr(Constants.KeyType.RSA, "CN=cert3");
+        Configuration configuration = new Configuration();
+        final Csr csr = testLib.genCsr(
+                Constants.KeyType.valueOf(configuration.getConfig().getProperty("keyMode")),
+                "CN=cert3"
+        );
+
         final String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
         final LoginResponse loginResp = login(username, password, pemCsr);
 
@@ -223,7 +249,7 @@ class TestWebApplication {
     }
 
 
-    private byte[] decrypt (PrivateKey privateKey, X509Certificate x509Certificate, String encryptedText)
+    private byte[] decrypt(PrivateKey privateKey, X509Certificate x509Certificate, String encryptedText)
             throws IOException, CMSException {
         final EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
         return encryptAndDecrypt.decrypt(
@@ -234,7 +260,7 @@ class TestWebApplication {
     }
 
 
-    private CmsSign.Result validate (byte[] cmsSignedData)
+    private CmsSign.Result validate(byte[] cmsSignedData)
             throws CertificateException, CMSException {
         final CmsSign cmsSign = new CmsSign();
         return cmsSign.verifyCmsSignature(
