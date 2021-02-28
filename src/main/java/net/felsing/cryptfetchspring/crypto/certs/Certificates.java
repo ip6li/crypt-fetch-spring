@@ -92,15 +92,15 @@ public final class Certificates {
     }
 
 
-    public void createSelfSignedCertificateRSA(String subjectDN)
+    public void createSelfSignedCertificateRSA(String subjectDN, boolean pss)
             throws OperatorCreationException, CertificateException, IOException,
             NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
-        createSelfSignedCertificateRSA(subjectDN, 2048);
+        createSelfSignedCertificateRSA(subjectDN, 2048, pss);
     }
 
 
-    public void createSelfSignedCertificateRSA(String subjectDN, Integer keyLength)
+    public void createSelfSignedCertificateRSA(String subjectDN, Integer keyLength, boolean pss)
             throws OperatorCreationException, CertificateException, IOException,
             NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
 
@@ -118,8 +118,12 @@ public final class Certificates {
         secureRandom.nextBytes(id);
         BigInteger serial = new BigInteger(160, secureRandom);
 
-        String signatureAlgorithm = "SHA256With" + tmpKeyPair.getPrivate().getAlgorithm();
-
+        String signatureAlgorithm;
+        if (pss) {
+            signatureAlgorithm = "SHA384withRSAandMGF1";
+        } else {
+            signatureAlgorithm = "SHA256With" + tmpKeyPair.getPrivate().getAlgorithm();
+        }
         ContentSigner contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).build(tmpKeyPair.getPrivate());
 
         JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(

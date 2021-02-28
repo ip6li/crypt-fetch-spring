@@ -19,28 +19,32 @@ package net.felsing.cryptfetchspring.crypto.certs;
 
 
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
+import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cert.jcajce.JcaCertStoreBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.cms.*;
 import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
-import org.bouncycastle.operator.*;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.DigestCalculatorProvider;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.util.Store;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import java.io.*;
-import java.security.*;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.Security;
 import java.security.cert.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 
 public final class CmsSign {
-    private static final Logger logger = LoggerFactory.getLogger(CmsSign.class);
+    private static final LogEngine logger = LogEngine.getLogger(CmsSign.class);
 
     static {
         Security.addProvider(ProviderLoader.getProvider());
@@ -68,11 +72,9 @@ public final class CmsSign {
     private CMSSignedData signCms(boolean enveloped, KeyPair key, X509Certificate cert, byte[] unsignedData)
             throws CertificateEncodingException, OperatorCreationException, CMSException {
 
-        String algorithm = key.getPrivate().getAlgorithm();
-        if (algorithm.equals("EC")) {
-            algorithm = "ECDSA";
-        }
-        final String signatureAlgorithm = "SHA256With" + algorithm;
+        String signatureAlgorithm = cert.getSigAlgName();
+        if (signatureAlgorithm.matches("RSASSA-PSS")) { signatureAlgorithm = "SHA256withRSAandMGF1"; }
+        logger.info(String.format("signCms: %s", signatureAlgorithm));
 
         List<X509Certificate> certList = new ArrayList<>();
 
@@ -142,7 +144,7 @@ public final class CmsSign {
                     chain.add(l);
                 } catch (Exception e) {
                     verifyOk[0] = false;
-                    logger.warn(String.format("Cannot validate message: %s", e.getMessage()));
+                    logger.warn(String.format("verifyCmsSignature: Cannot validate message: %s", e.getMessage()));
                 }
             });
             result.content = content;
@@ -150,7 +152,7 @@ public final class CmsSign {
             verifyOk[0] &= validateChain(trustStore, chain);
         } catch (Exception e) {
             verifyOk[0] = false;
-            logger.warn(String.format("None of the certificates are validating message: %s", e.getMessage()));
+            logger.warn(String.format("verifyCmsSignature: None of the certificates are validating message: %s", e.getMessage()));
         }
 
         result.verifyOk = verifyOk[0];
@@ -168,15 +170,17 @@ public final class CmsSign {
     private boolean validateChain(List<X509Certificate> trustStore, List<X509Certificate> signers) {
         Security.addProvider(ProviderLoader.getProvider());
         final boolean[] verifyOk = {true};
+
         try {
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(null, null);
             trustStore.forEach(k -> {
                 try {
                     ks.setCertificateEntry(k.getSubjectDN().getName(), k);
+                    logger.info(String.format("validateChain (trsutStore)\n%s", PemUtils.encodeObjectToPEM(k)));
                 } catch (Exception e) {
                     verifyOk[0] = false;
-                    logger.warn(String.format("Cannot add CA certificate to trustchain: %s", e.getMessage()));
+                    logger.warn(String.format("validateChain: Cannot add CA certificate to trustchain: %s", e.getMessage()));
                 }
             });
 
@@ -184,23 +188,61 @@ public final class CmsSign {
             JcaCertStoreBuilder builder = new JcaCertStoreBuilder();
             signers.forEach(k -> {
                 try {
+                    logger.info(String.format("validateChain (cert)\n%s", PemUtils.encodeObjectToPEM(k)));
                     builder.addCertificate(new X509CertificateHolder(k.getEncoded()));
                 } catch (CertificateEncodingException | IOException e) {
                     verifyOk[0] = false;
-                    logger.warn(String.format("Cannot add certificate to chain: %s", e.getMessage()));
+                    logger.warn(String.format("validateChain: Cannot add certificate to chain: %s", e.getMessage()));
                 }
             });
 
             params.addCertStore(builder.build());
             params.setRevocationEnabled(false);
+            params.getSigProvider();
             CertPathBuilder cpBuilder = CertPathBuilder.getInstance("PKIX", ProviderLoader.getProviderName());
             cpBuilder.build(params);
         } catch (Exception e) {
             verifyOk[0] = false;
-            logger.warn(String.format("Cannot validate certificate chain: %s", e.getMessage()));
+            logger.warn(String.format("validateChain: Cannot validate certificate chain: %s", e.getMessage()));
         }
 
         return verifyOk[0];
+    }
+
+
+    private static PKIXCertPathBuilderResult verifyCertificate(X509Certificate cert,
+                                                               Set<X509Certificate> trustedRootCerts,
+                                                               Set<X509Certificate> intermediateCerts)
+            throws GeneralSecurityException {
+
+        // Create the selector that specifies the starting certificate
+        X509CertSelector selector = new X509CertSelector();
+        selector.setCertificate(cert);
+
+        // Create the trust anchors (set of root CA certificates)
+        Set<TrustAnchor> trustAnchors = new HashSet<>();
+        for (X509Certificate trustedRootCert : trustedRootCerts) {
+            trustAnchors.add(new TrustAnchor(trustedRootCert, null));
+        }
+
+        // Configure the PKIX certificate builder algorithm parameters
+        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+
+        PKIXBuilderParameters pkixParams =
+                new PKIXBuilderParameters(trustAnchors, selector);
+
+
+        // Disable CRL checks (this is done manually as additional step)
+        pkixParams.setRevocationEnabled(false);
+
+        // Specify a list of intermediate certificates
+        CertStore certStore = CertStore.getInstance("Collection",
+                new CollectionCertStoreParameters(trustedRootCerts));
+        pkixParams.addCertStore(certStore);
+
+        // Build and verify the certification chain
+        CertPathBuilder builder = CertPathBuilder.getInstance("PKIX");
+        return (PKIXCertPathBuilderResult) builder.build(pkixParams);
     }
     
 } // class

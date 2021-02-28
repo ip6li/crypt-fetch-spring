@@ -9,6 +9,7 @@ import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
 import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
+import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import net.felsing.cryptfetchspring.login.LoginModel;
 import net.felsing.cryptfetchspring.models.PayloadDemoModel;
@@ -131,7 +132,7 @@ class TestWebApplication {
 
         final String username = "myUserName";
         final String password = "myPassword";
-        final Csr csr = testLib.genCsr("CN=cert1");
+        final Csr csr = testLib.genCsr(Constants.KeyType.RSA, "CN=cert1");
         final String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
 
         final LoginResponse respMap = login(username, password, pemCsr);
@@ -162,7 +163,7 @@ class TestWebApplication {
     void testMessage () throws Exception {
         final String username = "myUsername2";
         final String password = "myPassword2";
-        final Csr csr = testLib.genCsr("CN=cert2");
+        final Csr csr = testLib.genCsr(Constants.KeyType.RSA, "CN=cert2");
         final String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
 
         final String plainTextSend = "Hello world! Umlaute: äöüÄÖÜß€";
@@ -201,7 +202,7 @@ class TestWebApplication {
         final String password = "myPassword3";
 
         // Build a valid certificate
-        final Csr csr = testLib.genCsr("CN=cert3");
+        final Csr csr = testLib.genCsr(Constants.KeyType.RSA, "CN=cert3");
         final String pemCsr = PemUtils.encodeObjectToPEM(csr.getCsr());
         final LoginResponse loginResp = login(username, password, pemCsr);
 

@@ -77,7 +77,10 @@ public final class CA {
         }
         switch (mode) {
             case RSA:
-                certificates.createSelfSignedCertificateRSA(subjectDN);
+                certificates.createSelfSignedCertificateRSA(subjectDN, false);
+                break;
+            case RSAPSS:
+                certificates.createSelfSignedCertificateRSA(subjectDN, true);
                 break;
             case EC:
                 certificates.createSelfSignedCertificateEC(subjectDN);

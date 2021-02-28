@@ -18,12 +18,17 @@
 package net.felsing.cryptfetchspring.crypto.certs;
 
 
-import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
-import org.bouncycastle.asn1.*;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
+import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -35,9 +40,10 @@ import org.bouncycastle.operator.*;
 import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
 import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import java.io.*;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -53,7 +59,7 @@ import java.util.List;
 
 
 public final class Signer {
-    private static final Logger logger = LoggerFactory.getLogger(Signer.class);
+    private static final LogEngine logger = LogEngine.getLogger(Signer.class);
 
     static {
         Security.addProvider(ProviderLoader.getProvider());
@@ -77,7 +83,7 @@ public final class Signer {
             NoSuchAlgorithmException, IOException,
             NoSuchProviderException, CertificateException, InvalidKeySpecException {
 
-        return sign(modeEnum.CLIENT, inputCSR, privateKey, caCertificate);
+        return signCert(modeEnum.CLIENT, inputCSR, privateKey, caCertificate);
     }
 
 
@@ -86,24 +92,33 @@ public final class Signer {
             NoSuchAlgorithmException, IOException,
             NoSuchProviderException, CertificateException, InvalidKeySpecException {
 
-        return sign(modeEnum.SERVER, inputCSR, privateKey, caCertificate);
+        return signCert(modeEnum.SERVER, inputCSR, privateKey, caCertificate);
     }
 
 
-    private String sign(modeEnum mode, String inputCSR, String privateKey, String caCertificate)
-            throws NoSuchAlgorithmException,
-            NoSuchProviderException, IOException,
-            OperatorCreationException, java.security.cert.CertificateException, InvalidKeySpecException {
-
+    private PrivateKey getCaPrivateKey (String privateKey) {
         PrivateKey caPrivate = null;
 
         try {
             caPrivate = extractKey(PemUtils.parseDERfromPEM(
                     privateKey.getBytes()),
-                    "RSA"
+                    KeyUtils.RSAPSS
             );
+            logger.info("getCaPrivateKey: RSAPSS key");
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error(String.format("getCaPrivateKey: %s", e.getMessage()));
+        }
+
+        if (caPrivate == null) {
+            try {
+                caPrivate = extractKey(PemUtils.parseDERfromPEM(
+                        privateKey.getBytes()),
+                        "RSA"
+                );
+                logger.info("getCaPrivateKey: RSA key");
+            } catch (Exception e) {
+                logger.error(String.format("getCaPrivateKey: %s", e.getMessage()));
+            }
         }
 
         if (caPrivate == null) {
@@ -112,11 +127,22 @@ public final class Signer {
                         privateKey.getBytes()),
                         "EC"
                 );
+                logger.info("getCaPrivateKey: EC key");
             } catch (Exception e) {
-                logger.error(String.format("Neither RSA nor EC key: %s", e.getMessage()));
+                logger.error(String.format("getCaPrivateKey: Neither RSA nor EC key: %s", e.getMessage()));
             }
         }
 
+        return caPrivate;
+    }
+
+
+    private String signCert(modeEnum mode, String inputCSR, String privateKey, String caCertificate)
+            throws NoSuchAlgorithmException,
+            NoSuchProviderException, IOException,
+            OperatorCreationException, java.security.cert.CertificateException, InvalidKeySpecException {
+
+        PrivateKey caPrivate = getCaPrivateKey(privateKey);
         if (caPrivate == null) {
             throw new IOException("Private key not readable");
         }
@@ -129,20 +155,17 @@ public final class Signer {
         );
         
         PublicKey csrPublicKey;
-        final String caPrivateKeyAlgorithm = caPrivate.getAlgorithm();
-        final String csrKeyAlgorithm = pk10Holder.getSubjectPublicKeyInfo().getAlgorithm().getAlgorithm().getId();
-        
-        KeyFactory keyFactory = null;
-        if (csrKeyAlgorithm.equals(Constants.keyAlgoOidEC)) {
-            keyFactory = KeyFactory.getInstance("EC");
-        } else if (csrKeyAlgorithm.equals(Constants.keyAlgoOidRSA)) {
-            keyFactory = KeyFactory.getInstance("RSA");
-        }
-        if (keyFactory == null)
-            throw new CertIOException("cannot find keyfactory");
+        final String caSignatureAlg = caCert.getSigAlgName();
+        logger.info(String.format("signCert: caCert.getSigAlgName() %s", caSignatureAlg));
+        final String csrKeyAlgorithm = pk10Holder.getSignatureAlgorithm().getAlgorithm().getId();
+
+        final String csrKeyAlgorithmName = KeyUtils.deriveKeyFactoryFromAlg(csrKeyAlgorithm, true);
+        logger.info(String.format("signCert: csrKeyAlgorithmName: %s", csrKeyAlgorithmName));
+        final KeyFactory keyFactory = KeyFactory.getInstance(csrKeyAlgorithmName);
+
         csrPublicKey = keyFactory.generatePublic(new X509EncodedKeySpec(pk10Holder.getSubjectPublicKeyInfo().getEncoded()));
 
-        if (csrPublicKey == null) throw new CertIOException("CSR has no public key");
+        if (csrPublicKey == null) throw new CertIOException("signCert: CSR has no public key");
         AsymmetricKeyParameter asymmetricKeyParameter = PrivateKeyFactory.createKey(caPrivate.getEncoded());
         SubjectPublicKeyInfo keyInfo = SubjectPublicKeyInfo.getInstance(csrPublicKey.getEncoded());
 
@@ -188,6 +211,7 @@ public final class Signer {
             case SERVER:
                 setKeyUsageServer(x509v3CertificateBuilder);
                 break;
+            default: throw new IOException("signCert: Unknown mode");
         }
 
         fillInto(x509v3CertificateBuilder);
@@ -197,16 +221,21 @@ public final class Signer {
         AlgorithmIdentifier sigAlgId;
         AlgorithmIdentifier digAlgId;
 
-        if (caPrivateKeyAlgorithm.matches("EC.*")) {
+        logger.info(String.format("signCert: caPrivateKeyAlgorithm: %s",caSignatureAlg));
+        if (caSignatureAlg.matches("EC.*")) {
             sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA_256_WITH_ECDSA);
             digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
             sigGen = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(asymmetricKeyParameter);
-        } else if (caPrivateKeyAlgorithm.matches("RSA")) {
+        } else if (caSignatureAlg.matches("RSASSA-PSS")) {
+            sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA_384_WITH_RSA_AND_MGF1);
+            digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
+            sigGen = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(asymmetricKeyParameter);
+        } else if (caSignatureAlg.matches(KeyUtils.RSA_REGEX)) {
             sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA_256_WITH_RSA);
             digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
             sigGen = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(asymmetricKeyParameter);
         } else {
-            throw new IOException("Only EC or RSA are supported, requested: " + caPrivateKeyAlgorithm);
+            throw new IOException("Only EC or RSA are supported, requested: " + caSignatureAlg);
         }
 
         X509CertificateHolder holder = x509v3CertificateBuilder.build(sigGen);
@@ -341,7 +370,7 @@ public final class Signer {
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(pkcs8key);
         KeyFactory keyFactory = KeyFactory.getInstance(mode);
         PrivateKey privateKey = keyFactory.generatePrivate(pkcs8EncodedKeySpec);
-        logger.trace(privateKey.getAlgorithm());
+        logger.trace(String.format("extractKey: %s", privateKey.getAlgorithm()));
         return privateKey;
     }
     

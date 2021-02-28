@@ -20,11 +20,12 @@ package net.felsing.cryptfetchspring.crypto.config;
 
 public final class Constants {
 
-    public enum KeyType { RSA, EC }
+    public enum KeyType { RSA, RSAPSS, EC }
 
     // attribute ids
     public static final String SHA_256_WITH_ECDSA = "SHA256withECDSA";
     public static final String SHA_256_WITH_RSA = "SHA256withRSA";
+    public static final String SHA_384_WITH_RSA_AND_MGF1 = "SHA384withRSAandMGF1";
 
     // PEM tags
     public static final String CMS_BEGIN = "-----BEGIN CMS-----";
@@ -38,8 +39,6 @@ public final class Constants {
     public static final String CRT_BEGIN ="-----BEGIN CERTIFICATE-----";
     public static final String CRT_END ="-----END CERTIFICATE-----";
 
-    // OIDs
-    public static final String keyAlgoOidRSA = "1.2.840.113549.1.1.1";
     public static final String keyAlgoOidEC = "1.2.840.10045.2.1";
     public static final String oidSan = "2.5.29.19";
 

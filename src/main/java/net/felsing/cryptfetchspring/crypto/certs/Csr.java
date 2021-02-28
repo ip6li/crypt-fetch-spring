@@ -18,15 +18,20 @@
 package net.felsing.cryptfetchspring.crypto.certs;
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
-import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.ExtensionsGenerator;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
+
 import javax.security.auth.x500.X500Principal;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -38,7 +43,7 @@ import java.util.List;
 
 
 public final class Csr {
-
+    private static final LogEngine logger = LogEngine.getLogger(Csr.class);
     private KeyPair keyPair;
     private PKCS10CertificationRequest pkcs10CertificationRequest;
 
@@ -60,11 +65,15 @@ public final class Csr {
         PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(
                 new X500Principal(dn), keyPair.getPublic());
 
-        String alg = keyPair.getPrivate().getAlgorithm();
-        if (alg.matches("EC.*")) {
-            alg="ECDSA";
+        String alg;
+        switch (keyType) {
+            case EC: alg=String.format("SHA256with%s",KeyUtils.EC); break;
+            case RSA: alg=String.format("SHA256with%s",KeyUtils.RSA); break;
+            case RSAPSS: alg="SHA384withRSAandMGF1"; break;
+            default: throw new IOException(String.format("Unknown keytype: %s", keyType));
         }
-        JcaContentSignerBuilder csBuilder = new JcaContentSignerBuilder("SHA256with" + alg);
+
+        JcaContentSignerBuilder csBuilder = new JcaContentSignerBuilder(alg);
         if (sanList!=null) {
             setSubjectAltNames(p10Builder, sanList);
         }
@@ -87,7 +96,9 @@ public final class Csr {
         int size;
 
         switch (keyType) {
-            case RSA: size=2048; break;
+            case RSA:
+            case RSAPSS:
+                size=2048; break;
             case EC: size=256; break;
             default: throw new IOException("Unknown key type: " + keyType.toString());
         }

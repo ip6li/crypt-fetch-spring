@@ -57,7 +57,7 @@ public final class Configuration extends ConfigurationBase {
             config.setProperty("caFile", "CA-ECDSA.p12");
         } else {
             config.setProperty("js.sign", "RSASSA-PKCS1-V1_5");
-            config.setProperty("keyMode", Constants.KeyType.RSA.toString());
+            config.setProperty("keyMode", Constants.KeyType.RSAPSS.toString());
             config.setProperty("server.DN", "CN=The server certificate RSA");
             config.setProperty("signer.DN", "CN=The signer certificate RSA");
             config.setProperty("caFile", "CA-RSA.p12");

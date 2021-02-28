@@ -5,18 +5,16 @@ import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import net.felsing.cryptfetchspring.models.ErrorModel;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 class TestBasicFunctions {
-    private static final Logger logger = LoggerFactory.getLogger(TestBasicFunctions.class);
+    private static final LogEngine logger = LogEngine.getLogger(TestBasicFunctions.class);
 
     private static TestLib testLib;
     private static Configuration config;
@@ -86,10 +84,9 @@ class TestBasicFunctions {
 
         final String decryptedText = new String(bDecryptedText);
 
-        if (logger.isInfoEnabled()) {
             logger.info("[encrypt] plainText: " + plainText);
             logger.info("[encrypt] decryptedText: " + decryptedText);
-        }
+
 
         assertEquals(decryptedText, plainText);
     }
@@ -125,14 +122,15 @@ class TestBasicFunctions {
     }
 
 
-    @Test
-    void generateCsrWithSAN() throws Exception {
+    private void generateCsrWithSAN(Constants.KeyType mode, int size) throws Exception {
+
         final List<GeneralName> sanList = new ArrayList<>();
         // this SAN will be thrown away by signer
         sanList.add(new GeneralName(GeneralName.dNSName, "name.example.com"));
         final Csr csr = new Csr();
-        csr.createCsr(Constants.KeyType.RSA, 2048, "CN=my CSR with SAN", sanList);
+        csr.createCsr(mode, size, String.format("CN=my CSR with SAN (%s)", mode), sanList);
         final String csrPem = PemUtils.encodeObjectToPEM(csr.getCsr());
+        logger.info(String.format("generateCsrWithSAN (CSR): %s\n%s", mode, csrPem));
         assertTrue(csrPem.length() > 0);
 
         // Test some PemUtils tools
@@ -171,23 +169,16 @@ class TestBasicFunctions {
         assertTrue(clientCertificate.length() > 0);
 
         final X509Certificate clientX509 = PemUtils.getCertificateFromPem(clientCertificate);
+        logger.info(String.format("generateCsrWithSAN (Cert): %s\n%s", mode, clientCertificate));
         Objects.requireNonNull(
                 Certificates.getSubjectAlternativeNames(clientX509)).forEach((v) -> assertTrue(v.length() > 0));
     }
 
     @Test
-    void testEC() throws Exception {
-        final KeyPair keyPair = KeyUtils.generateKeypairEC("ECDSA", "prime256v1");
-        assertNotNull(keyPair);
-
-        final Csr csr = new Csr();
-        csr.createCsr(Constants.KeyType.EC, "CN=ec test");
-        PKCS10CertificationRequest pkcs10 = csr.getCsr();
-        assertNotNull(pkcs10);
-
-        final String pkcs10pem = PemUtils.encodeObjectToPEM(pkcs10);
-        assertTrue(pkcs10pem.length() > 300);
-        logger.info(pkcs10pem);
+    void generateCsrWithSAN() throws Exception {
+        for (Constants.KeyType i: Constants.KeyType.values()) {
+            generateCsrWithSAN(i, 2048);
+        }
     }
 
     @Test
@@ -212,18 +203,29 @@ class TestBasicFunctions {
         final X509Certificate x509Certificate = certificates.getX509Certificate();
         assertNotNull(keyPair);
         assertNotNull(x509Certificate);
-        logger.info("testSelfSignedCertificateEC:\n{}", PemUtils.encodeObjectToPEM(x509Certificate));
+        logger.info(String.format("testSelfSignedCertificateEC:\n%s", PemUtils.encodeObjectToPEM(x509Certificate)));
     }
 
     @Test
     void testSelfSignedCertificateRSA() throws Exception {
-        final Certificates certificates = buildSelfSignedCertificate();
-        certificates.createSelfSignedCertificateRSA("CN=My Selfsigned Cert RSA", 2048);
-        final KeyPair keyPair = certificates.getKeyPair();
-        final X509Certificate x509Certificate = certificates.getX509Certificate();
-        assertNotNull(keyPair);
-        assertNotNull(x509Certificate);
-        logger.info("testSelfSignedCertificateRSA:\n{}", PemUtils.encodeObjectToPEM(x509Certificate));
+        for (int i=0; i<2; i++) {
+            boolean pss = i==1;
+            final Certificates certificates = buildSelfSignedCertificate();
+            certificates.createSelfSignedCertificateRSA(
+                    String.format("CN=My Selfsigned Cert RSA (PSS: %b)", pss),
+                    2048,
+                    pss
+            );
+            final KeyPair keyPair = certificates.getKeyPair();
+            final X509Certificate x509Certificate = certificates.getX509Certificate();
+            assertNotNull(keyPair);
+            assertNotNull(x509Certificate);
+            logger.info(String.format(
+                    "testSelfSignedCertificateRSA (PSS: %b):\n%s",
+                    pss,
+                    PemUtils.encodeObjectToPEM(x509Certificate))
+            );
+        }
     }
 
     @Test

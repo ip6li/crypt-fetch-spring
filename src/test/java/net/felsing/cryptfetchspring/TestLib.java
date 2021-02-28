@@ -5,10 +5,9 @@ import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +20,7 @@ import java.util.HashMap;
 
 
 public class TestLib {
-    private static final Logger logger = LoggerFactory.getLogger(TestLib.class);
+    private static final LogEngine logger = LogEngine.getLogger(TestLib.class);
     public static final String pkiPath = "/tmp/pki";
 
     private static CA ca;
@@ -32,7 +31,7 @@ public class TestLib {
             throws IOException, CertificateException, NoSuchAlgorithmException,
             UnrecoverableKeyException, InvalidAlgorithmParameterException,
             URISyntaxException, NoSuchProviderException, OperatorCreationException,
-            KeyStoreException {
+            KeyStoreException, InvalidKeySpecException {
         logger.debug("TestLib initialized");
         ca = CryptInit.getInstance(caRootPath);
         logger.info(String.format("caRootPath: %s", caRootPath));
@@ -45,7 +44,7 @@ public class TestLib {
     public static TestLib getInstance(String caRootPath)
             throws IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException,
             KeyStoreException, InvalidAlgorithmParameterException, NoSuchProviderException,
-            OperatorCreationException, URISyntaxException {
+            OperatorCreationException, URISyntaxException, InvalidKeySpecException {
 
         if (testLib == null) {
             testLib = new TestLib(caRootPath);
@@ -55,11 +54,11 @@ public class TestLib {
     }
 
 
-    public Csr genCsr(String dn)
+    public Csr genCsr(Constants.KeyType mode, String dn)
             throws OperatorCreationException, InvalidAlgorithmParameterException,
             NoSuchAlgorithmException, NoSuchProviderException, IOException {
         Csr request = new Csr();
-        request.createCsr(Constants.KeyType.RSA, "CN=".concat(dn));
+        request.createCsr(mode, "CN=".concat(dn));
         return request;
     }
 

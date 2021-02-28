@@ -19,18 +19,20 @@ package net.felsing.cryptfetchspring.crypto.certs;
 
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.bouncycastle.operator.OperatorCreationException;
+
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 
 
 public final class ServerCertificate {
-    private static final Logger logger = LoggerFactory.getLogger(ServerCertificate.class);
+    private static final LogEngine logger = LogEngine.getLogger(ServerCertificate.class);
     private KeyPair keyPair;
     private X509Certificate x509ServerCertificate;
 
@@ -51,7 +53,10 @@ public final class ServerCertificate {
         return PemUtils.encodeObjectToPEM(x509ServerCertificate);
     }
 
-    public void generate (CA ca, String dn, Constants.KeyType mode, int validForDays) {
+    public void generate (CA ca, String dn, Constants.KeyType mode, int validForDays)
+            throws NoSuchAlgorithmException, OperatorCreationException,
+            InvalidAlgorithmParameterException, NoSuchProviderException, IOException,
+            CertificateException, InvalidKeySpecException {
 
         if (validForDays==0) { // 0 for default of 1 year
             validForDays = 365;
@@ -60,6 +65,7 @@ public final class ServerCertificate {
         int keySize=-1;
         switch (mode) {
             case RSA:
+            case RSAPSS:
                 keySize=2048;
                 break;
             case EC:
@@ -68,7 +74,6 @@ public final class ServerCertificate {
         }
 
         Csr csr = new Csr();
-        try {
             csr.createCsr(mode, keySize, dn, null);
             keyPair = csr.getKeyPair();
 
@@ -82,9 +87,7 @@ public final class ServerCertificate {
             );
 
             x509ServerCertificate = PemUtils.getCertificateFromPem (signedCertificate);
-        } catch (Exception e) {
-            logger.warn(e.getMessage());
-        }
+
     }
 
 
