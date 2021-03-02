@@ -2,6 +2,7 @@ package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.*;
+import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
@@ -12,16 +13,12 @@ import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -53,7 +50,7 @@ class TestBasicFunctions {
         config = new Configuration();
     }
 
-    @AfterAll
+    //@AfterAll
     static void cleanUp () throws IOException {
         File filePkiPath = new File(TestLib.pkiPath);
         if (!TestLib.deleteDirectory(filePkiPath)) {
@@ -74,7 +71,7 @@ class TestBasicFunctions {
         final String plainText = "Hello world! Umlaute: äöüÄÖÜß€";
         byte[] bPlainText = plainText.getBytes();
 
-        final RSAPrivateKey privateKey = PemUtils.getPrivateKeyFromPem(clientCert.get("privateKey"));
+        final PrivateKey privateKey = PemUtils.getPrivateKeyFromPem(clientCert.get("privateKey"));
         final X509Certificate certificate = PemUtils.getCertificateFromPem(clientCert.get("certificate"));
         final EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
 

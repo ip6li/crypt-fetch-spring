@@ -31,7 +31,7 @@ public final class Configuration extends ConfigurationBase {
 
     public enum BC_TYPE {BC, BCFIPS}
 
-    private static final boolean USE_EC = Boolean.parseBoolean(readFromVMoptions("ec", "false"));
+    private static final boolean USE_EC = Boolean.parseBoolean(readFromVMoptions("ec", "true"));
 
 
     @Override

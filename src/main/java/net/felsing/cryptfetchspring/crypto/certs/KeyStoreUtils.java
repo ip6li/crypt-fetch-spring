@@ -8,6 +8,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Enumeration;
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
+import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -45,7 +47,7 @@ public final class KeyStoreUtils {
     public static void saveToKeystore (String alias, KeyPair keyPair, X509Certificate x509Certificate,
                                        String keyStoreFile, String password)
             throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        KeyStore keyStore = KeyStore.getInstance("PKCS12", ProviderLoader.getProvider());
         X509Certificate[] x509CertificateList = new X509Certificate[1];
         x509CertificateList[0]=x509Certificate;
         keyStore.load(null, null);

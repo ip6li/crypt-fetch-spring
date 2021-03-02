@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.*;
+import java.security.cert.Certificate;
 import java.util.*;
 
 
@@ -198,12 +199,29 @@ public final class Certificates {
 
         setExtendedUsage(certificate);
 
-        ContentSigner signer = new JcaContentSignerBuilder("SHA256withECDSA")
+        String signatureAlgorithm = "SHA256withECDSA";
+        ContentSigner signer = new JcaContentSignerBuilder(signatureAlgorithm)
                 .build(keypair.getPrivate());
         X509CertificateHolder holder = certificate.build(signer);
 
         this.keyPair = keypair;
         this.x509Certificate = new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(holder);
+
+        SubjectPublicKeyInfo subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(keyPair
+                .getPublic().getEncoded());
+
+        X509v3CertificateBuilder certificateBuilder = new X509v3CertificateBuilder(subject,
+                serial, startDate, endDate, subject, subjectPublicKeyInfo);
+
+        ContentSigner contentSigner = new JcaContentSignerBuilder(signatureAlgorithm).setProvider(
+                bcProvider).build(keyPair.getPrivate());
+
+        X509CertificateHolder certificateHolder = certificateBuilder.build(contentSigner);
+
+        X509Certificate selfSignedCert = new JcaX509CertificateConverter()
+                .getCertificate(certificateHolder);
+
+        this.x509Certificate = selfSignedCert;
     }
 
 

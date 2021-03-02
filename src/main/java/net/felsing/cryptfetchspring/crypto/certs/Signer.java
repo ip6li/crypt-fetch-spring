@@ -222,7 +222,7 @@ public final class Signer {
         AlgorithmIdentifier digAlgId;
 
         logger.info(String.format("signCert: caPrivateKeyAlgorithm: %s",caSignatureAlg));
-        if (caSignatureAlg.matches("EC.*")) {
+        if (caSignatureAlg.matches("EC.*") || caSignatureAlg.matches("SHA.*withEC.*")) {
             sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(Constants.SHA_256_WITH_ECDSA);
             digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
             sigGen = new BcECContentSignerBuilder(sigAlgId, digAlgId).build(asymmetricKeyParameter);

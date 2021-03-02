@@ -65,7 +65,6 @@ public class CryptInit {
                     caDN,
                     Integer.valueOf(properties.getProperty("ca.days"))
             );
-
             ca.saveCertificationAuthorityKeystore(caFile.getAbsolutePath(), keyStorePassword);
         } else {
             ca.loadCertificationAuthorityKeystore(caFile.getAbsolutePath(), keyStorePassword);

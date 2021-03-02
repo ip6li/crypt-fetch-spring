@@ -73,7 +73,10 @@ public class TestLib {
         String csr;
         String certificate;
 
-        request.createCsr(Constants.KeyType.RSA, "CN=".concat(cn));
+        request.createCsr(
+                Constants.KeyType.valueOf(new Configuration().getConfig().getProperty("keyMode")),
+                "CN=".concat(cn)
+        );
         privateKey = PemUtils.encodeObjectToPEM(request.getKeyPair().getPrivate());
         csr = PemUtils.encodeObjectToPEM(request.getCsr());
         certStore.put("privateKey", privateKey);

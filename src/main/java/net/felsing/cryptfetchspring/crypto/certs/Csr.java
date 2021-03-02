@@ -67,7 +67,7 @@ public final class Csr {
 
         String alg;
         switch (keyType) {
-            case EC: alg=String.format("SHA256with%s",KeyUtils.EC); break;
+            case EC: alg=String.format("SHA256withECDSA"); break;
             case RSA: alg=String.format("SHA256with%s",KeyUtils.RSA); break;
             case RSAPSS: alg="SHA384withRSAandMGF1"; break;
             default: throw new IOException(String.format("Unknown keytype: %s", keyType));

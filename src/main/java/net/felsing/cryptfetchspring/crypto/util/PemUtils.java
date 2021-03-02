@@ -2,21 +2,21 @@ package net.felsing.cryptfetchspring.crypto.util;
 
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.Certificate;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.cert.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
-import java.nio.charset.StandardCharsets;
-import java.security.cert.*;
 
 
 /****************************************************************************************************************
@@ -199,13 +199,35 @@ public final class PemUtils {
      * @param pem               PEM encoded private key
      * @return                  RSAPrivateKey
      */
-    public static RSAPrivateKey getPrivateKeyFromPem (String pem)
+    private static PrivateKey getRsaPrivateKeyFromPem(String pem)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(parseDERfromPEM(pem.getBytes()));
-        return (RSAPrivateKey) kf.generatePrivate(keySpec);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(parseDERfromPEM(pem.getBytes()));
+            return kf.generatePrivate(keySpec);
     }
 
+    private static PrivateKey getEcPrivateKeyFromPem(String pem)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+            KeyFactory kf = KeyFactory.getInstance("EC");
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(parseDERfromPEM(pem.getBytes()));
+            return kf.generatePrivate(keySpec);
+    }
+
+    public static PrivateKey getPrivateKeyFromPem(String pem)
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+        try {
+            return getRsaPrivateKeyFromPem(pem);
+        } catch (InvalidKeySpecException e) {
+            logger.debug(String.format("getPrivateKeyFromPem (RSA): %s", e.getMessage()));
+        }
+
+        try {
+            return getEcPrivateKeyFromPem(pem);
+        } catch (InvalidKeySpecException e) {
+            logger.debug(String.format("getPrivateKeyFromPem (EC): %s", e.getMessage()));
+            throw new InvalidKeySpecException(e);
+        }
+    }
 
     /**
      * Parses PEM encoded private key/certificate and
@@ -219,7 +241,7 @@ public final class PemUtils {
             throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException {
         X509Certificate x509cert = getCertificateFromPem(pemCert);
         PublicKey publicKey = x509cert.getPublicKey();
-        RSAPrivateKey privKey = getPrivateKeyFromPem(pemPrivateKey);
+        PrivateKey privKey = getPrivateKeyFromPem(pemPrivateKey);
 
         return new KeyPair(publicKey, privKey);
     }

@@ -18,7 +18,7 @@ public final class KeyUtils {
 
     public static final String RSA = "RSA";
     public static final String RSAPSS = "RSASSA-PSS";
-    public static final String EC = "ECDSA";
+    public static final String EC = "EC";
     public static final String ECCURVE = "prime256v1";
     public static final String RSA_REGEX = "SHA.*RSA";
 

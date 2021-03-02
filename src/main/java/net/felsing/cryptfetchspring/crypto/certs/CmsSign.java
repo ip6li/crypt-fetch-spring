@@ -72,9 +72,19 @@ public final class CmsSign {
     private CMSSignedData signCms(boolean enveloped, KeyPair key, X509Certificate cert, byte[] unsignedData)
             throws CertificateEncodingException, OperatorCreationException, CMSException {
 
-        String signatureAlgorithm = cert.getSigAlgName();
-        logger.info(String.format("signCms1: %s", signatureAlgorithm));
-        if (signatureAlgorithm.matches("RSASSA-PSS")) { signatureAlgorithm = "SHA256withRSAandMGF1"; }
+        String keyAlgo = key.getPrivate().getAlgorithm();
+        String hashAlgo = "SHA256";
+        String signatureAlgorithm;
+        if ("EC".equalsIgnoreCase(keyAlgo)) {
+            signatureAlgorithm = hashAlgo + "WITHECDSA";
+        } else {
+            signatureAlgorithm = hashAlgo + "WITH" + keyAlgo;
+        }
+
+
+        //String signatureAlgorithm = cert.getSigAlgName();
+        //logger.info(String.format("signCms1: %s", signatureAlgorithm));
+        if (signatureAlgorithm.matches(".*RSASSA-PSS")) { signatureAlgorithm = "SHA256withRSAandMGF1"; }
         logger.info(String.format("signCms2: %s", signatureAlgorithm));
 
         List<X509Certificate> certList = new ArrayList<>();
