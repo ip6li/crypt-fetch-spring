@@ -218,7 +218,7 @@ public final class PemUtils {
         try {
             return getRsaPrivateKeyFromPem(pem);
         } catch (InvalidKeySpecException e) {
-            logger.debug(String.format("getPrivateKeyFromPem (RSA): %s", e.getMessage()));
+            logger.trace(String.format("getPrivateKeyFromPem (RSA): %s", e.getMessage()));
         }
 
         try {

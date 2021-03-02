@@ -24,11 +24,9 @@ import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.*;
-import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.cert.CertIOException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -36,7 +34,10 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
-import org.bouncycastle.operator.*;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
+import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.bc.BcECContentSignerBuilder;
 import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -106,7 +107,7 @@ public final class Signer {
             );
             logger.info("getCaPrivateKey: RSAPSS key");
         } catch (Exception e) {
-            logger.error(String.format("getCaPrivateKey: %s", e.getMessage()));
+            logger.trace(String.format("getCaPrivateKey: %s", e.getMessage()));
         }
 
         if (caPrivate == null) {
@@ -117,7 +118,7 @@ public final class Signer {
                 );
                 logger.info("getCaPrivateKey: RSA key");
             } catch (Exception e) {
-                logger.error(String.format("getCaPrivateKey: %s", e.getMessage()));
+                logger.trace(String.format("getCaPrivateKey: %s", e.getMessage()));
             }
         }
 
@@ -129,7 +130,7 @@ public final class Signer {
                 );
                 logger.info("getCaPrivateKey: EC key");
             } catch (Exception e) {
-                logger.error(String.format("getCaPrivateKey: Neither RSA nor EC key: %s", e.getMessage()));
+                logger.trace(String.format("getCaPrivateKey: Neither RSA nor EC key: %s", e.getMessage()));
             }
         }
 

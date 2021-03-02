@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.felsing.cryptfetchspring.crypto.certs.Certificates;
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
@@ -44,11 +45,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TestWebApplication {
     private static final LogEngine logger = LogEngine.getLogger(TestWebApplication.class);
 
+    private static final Configuration config = new Configuration();
     private static final String CERTIFICATE = "certificate";
     private static final String AUTHENTICATED = "authenticated";
     private static TestLib testLib;
     private static String ca = null;
     private static X509Certificate serverCertificate = null;
+    private static Certificates senderCert;
 
     @LocalServerPort
     private int port;
@@ -102,6 +105,16 @@ class TestWebApplication {
             }
         }
         testLib = TestLib.getInstance(TestLib.pkiPath);
+
+        senderCert = new Certificates();
+        String keyMode = config.getConfig().getProperty("keyMode");
+        if (keyMode.equals(Constants.KeyType.EC.toString())) {
+            senderCert.createSelfSignedCertificateEC("CN=dummy cert");
+        } else if (keyMode.equals(Constants.KeyType.RSA.toString())) {
+            senderCert.createSelfSignedCertificateRSA("CN=dummy cert", false);
+        } else if (keyMode.equals(Constants.KeyType.RSAPSS.toString())) {
+            senderCert.createSelfSignedCertificateRSA("CN=dummy cert", true);
+        }
     }
 
 
@@ -130,7 +143,13 @@ class TestWebApplication {
         final EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
 
         final byte[] jsonResult = loginModel.serialize();
-        final String encrypted = encryptAndDecrypt.encryptPem(null, null, serverCertificate, jsonResult);
+
+        final String encrypted = encryptAndDecrypt.encryptPem(
+                senderCert.getKeyPair().getPrivate(),
+                senderCert.getX509Certificate(),
+                serverCertificate,
+                jsonResult
+        );
 
         final String response = this.restTemplate.postForObject(url, encrypted, String.class);
         return LoginResponse.deserialize(response);

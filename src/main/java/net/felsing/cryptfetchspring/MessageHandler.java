@@ -12,8 +12,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
 
@@ -40,7 +43,7 @@ public class MessageHandler {
 
     public String doRequest (String encryptedRequest, PayloadIntf callback)
             throws CMSException, OperatorCreationException, CertificateException,
-            IOException, InvalidAlgorithmParameterException {
+            IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
         EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
         CmsSign cmsSign = new CmsSign();
 

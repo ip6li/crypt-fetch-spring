@@ -1,8 +1,8 @@
 package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
+import net.felsing.cryptfetchspring.crypto.certs.*;
 import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
@@ -13,6 +13,7 @@ import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +23,6 @@ import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 
@@ -50,7 +50,7 @@ class TestBasicFunctions {
         config = new Configuration();
     }
 
-    //@AfterAll
+    @AfterAll
     static void cleanUp () throws IOException {
         File filePkiPath = new File(TestLib.pkiPath);
         if (!TestLib.deleteDirectory(filePkiPath)) {
@@ -75,7 +75,9 @@ class TestBasicFunctions {
         final X509Certificate certificate = PemUtils.getCertificateFromPem(clientCert.get("certificate"));
         final EncryptAndDecrypt encryptAndDecrypt = new EncryptAndDecrypt();
 
-        final String encryptedText = encryptAndDecrypt.encryptPem(certificate, bPlainText);
+        PrivateKey senderPrivateKey = PemUtils.getPrivateKeyFromPem(TestLib.getCa().getCaPrivateKeyPEM());
+        X509Certificate senderCert = PemUtils.getCertificateFromPem(TestLib.getCa().getCaCertificatePEM());
+        final String encryptedText = encryptAndDecrypt.encryptPem(senderPrivateKey, senderCert, certificate, bPlainText);
 
         final byte[] bDecryptedText = encryptAndDecrypt.decrypt(privateKey, certificate, encryptedText);
 

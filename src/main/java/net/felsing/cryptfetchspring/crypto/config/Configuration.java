@@ -31,7 +31,7 @@ public final class Configuration extends ConfigurationBase {
 
     public enum BC_TYPE {BC, BCFIPS}
 
-    private static final boolean USE_EC = Boolean.parseBoolean(readFromVMoptions("ec", "true"));
+    private static final Constants.KeyType keyType = Constants.KeyType.EC;
 
 
     @Override
@@ -48,19 +48,28 @@ public final class Configuration extends ConfigurationBase {
         config.setProperty("signer.days", Integer.toString(10 * oneYear));
         config.setProperty("certificate.days", Integer.toString(1));
 
-        // use either RSA or ECDSA
-        if (USE_EC) {
-            config.setProperty("js.sign", "ECDSA");
-            config.setProperty("keyMode", Constants.KeyType.EC.toString());
-            config.setProperty("server.DN", "CN=The server certificate ECDSA");
-            config.setProperty("signer.DN", "CN=The signer certificate ECDSA");
-            config.setProperty("caFile", "CA-ECDSA.p12");
-        } else {
-            config.setProperty("js.sign", "RSASSA-PKCS1-V1_5");
-            config.setProperty("keyMode", Constants.KeyType.RSAPSS.toString());
-            config.setProperty("server.DN", "CN=The server certificate RSA");
-            config.setProperty("signer.DN", "CN=The signer certificate RSA");
-            config.setProperty("caFile", "CA-RSA.p12");
+        switch (keyType) {
+            case EC:
+                config.setProperty("js.sign", "ECDSA");
+                config.setProperty("keyMode", Constants.KeyType.EC.toString());
+                config.setProperty("server.DN", "CN=The server certificate ECDSA");
+                config.setProperty("signer.DN", "CN=The signer certificate ECDSA");
+                config.setProperty("caFile", "CA-ECDSA.p12");
+                break;
+            case RSA:
+                config.setProperty("js.sign", "RSASSA-PKCS1-V1_5");
+                config.setProperty("keyMode", Constants.KeyType.RSA.toString());
+                config.setProperty("server.DN", "CN=The server certificate RSA");
+                config.setProperty("signer.DN", "CN=The signer certificate RSA");
+                config.setProperty("caFile", "CA-RSA.p12");
+                break;
+            case RSAPSS:
+                config.setProperty("js.sign", "RSASSA-PSS");
+                config.setProperty("keyMode", Constants.KeyType.RSAPSS.toString());
+                config.setProperty("server.DN", "CN=The server certificate RSA");
+                config.setProperty("signer.DN", "CN=The signer certificate RSA");
+                config.setProperty("caFile", "CA-RSA.p12");
+                break;
         }
     }
 
