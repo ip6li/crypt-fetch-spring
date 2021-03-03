@@ -19,6 +19,7 @@ import org.springframework.web.context.ServletContextAware;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.ServletContext;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +44,16 @@ public class CryptFetchSpringApplication implements ServletContextAware {
     }
 
 
+    private void createDir() throws IOException {
+        File filePkiPath = new File(caRootPath);
+        if (!filePkiPath.isDirectory()) {
+            if (!filePkiPath.mkdir()) {
+                throw new IOException(String.format("Cannot create dir %s", caRootPath));
+            }
+        }
+    }
+
+
     private static void setServerConfig (CA ca) throws IOException {
         final String configJsonFile = "config.json";
         ClassPathResource resource = new ClassPathResource(configJsonFile);
@@ -60,6 +71,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
     @PostConstruct
     public void addInitHooks() {
         try {
+            createDir();
             String absolutePath = servletContext.getRealPath("resources");
             if (logger.isInfoEnabled()) {
                 logger.info(String.format("[addInitHooks] absolutePath: %s", absolutePath));
