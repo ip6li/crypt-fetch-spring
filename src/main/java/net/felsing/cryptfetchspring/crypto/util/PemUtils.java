@@ -17,11 +17,8 @@ import java.security.cert.Certificate;
 import java.security.cert.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 /****************************************************************************************************************
@@ -227,12 +224,7 @@ public final class PemUtils {
             logger.trace(String.format("getPrivateKeyFromPem (RSA): %s", e.getMessage()));
         }
 
-        try {
-            return getEcPrivateKeyFromPem(pem);
-        } catch (InvalidKeySpecException e) {
-            logger.debug(String.format("getPrivateKeyFromPem (EC): %s", e.getMessage()));
-            throw e;
-        }
+        return getEcPrivateKeyFromPem(pem);
     }
 
     /**
@@ -274,16 +266,19 @@ public final class PemUtils {
 
     /**
      * Creates a random password as SHA-512 string.
+     * Fills an byze array with 64KByte random data
+     * and builds a SHA-512 hash about that array.
      *
-     * @return A random String
+     * @return A random hex string
      */
     public static String createRandomPassword()
             throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance("SHA-512");
-        SecureRandom secureRandom = new SecureRandom();
-        for (int i = 0; i < 65536; i++) {
-            md.update((byte) secureRandom.nextInt(255));
-        }
+        final int arrSize = 65536;
+        final byte[] rndBytes = new byte[arrSize];
+        final MessageDigest md = MessageDigest.getInstance("SHA-512");
+        final SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(rndBytes);
+        md.update(rndBytes);
         return Hex.toHexString(md.digest());
     }
 

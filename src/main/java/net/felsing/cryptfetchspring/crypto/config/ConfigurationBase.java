@@ -34,11 +34,10 @@ public abstract class ConfigurationBase {
 
     protected static final Properties config = new Properties();
     protected static File configFile;
-    protected static final String configFileName = "crypt-fetch-spring.ini";
     protected static final String keystoreDefaultPassword;
 
     static {
-        String tmpPassword = "changeit";
+        String tmpPassword = null;
         try {
             tmpPassword = PemUtils.createRandomPassword();
         } catch (NoSuchAlgorithmException e) {
@@ -79,7 +78,7 @@ public abstract class ConfigurationBase {
 
     private void loadConfig()
             throws IOException {
-        setConfigFile(Utils.findConfigFile(configFileName));
+        setConfigFile(Utils.findConfigFile(Constants.configFileName));
         logger.info(String.format("loadConfig: %s", configFile));
         if (configFile == null || !configFile.exists()) {
             logger.warn("loadConfig: No config file found, loading defaults");
@@ -101,21 +100,15 @@ public abstract class ConfigurationBase {
         try {
             logger.info(String.format("saveConfig: configFile found at %s", configFile.getAbsolutePath()));
         } catch (Exception e) {
-            configFile = new File(configFileName);
+            configFile = new File(Constants.configFileName);
             logger.info("saveConfig: creating new config file");
         }
-        try (FileOutputStream propsFile = new FileOutputStream(configFileName)) {
+        try (FileOutputStream propsFile = new FileOutputStream(Constants.configFileName)) {
             config.storeToXML(propsFile, "config");
         } catch (IOException e) {
             logger.error(String.format("saveConfig: %s", e.getMessage()));
             throw new IOException(e);
         }
-    }
-
-
-    protected String getKeystoreDefaultPassword() {
-
-        return keystoreDefaultPassword;
     }
 
 

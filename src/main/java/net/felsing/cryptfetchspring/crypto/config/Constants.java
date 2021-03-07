@@ -22,6 +22,8 @@ public final class Constants {
 
     public enum KeyType { RSA, RSAPSS, EC }
 
+    public static final String configFileName = "crypt-fetch-spring.ini";
+
     // attribute ids
     public static final String SHA_256_WITH_ECDSA = "SHA256withECDSA";
     public static final String SHA_256_WITH_RSA = "SHA256withRSA";
