@@ -18,18 +18,20 @@
 package net.felsing.cryptfetchspring.crypto.certs;
 
 import net.felsing.cryptfetchspring.crypto.config.Constants;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.operator.OperatorCreationException;
+
 import java.io.IOException;
 import java.security.*;
-import java.security.cert.*;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 
 public final class CA {
-    private static final Logger logger = LoggerFactory.getLogger(CA.class);
+    private static final LogEngine logger = LogEngine.getLogger(CA.class);
 
     private KeyPair caKeyPair;
     private X509Certificate caX509Certificate;
@@ -101,9 +103,7 @@ public final class CA {
 
         caKeyPair = KeyStoreUtils.getKeypairFromKeystore(keyStore, keystorePassword);
         caX509Certificate = KeyStoreUtils.getCertificateFromKeystore(keyStore, keystorePassword);
-        if (logger.isInfoEnabled()) {
-            logger.info(String.format("Using existing CA certificate %s", keystoreFile));
-        }
+        logger.info(String.format("Using existing CA certificate %s", keystoreFile));
     }
 
     public void saveCertificationAuthorityKeystore(String keystoreFile, String keystorePassword)

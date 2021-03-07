@@ -1,9 +1,6 @@
 package net.felsing.cryptfetchspring.crypto.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,14 +11,15 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Map;
 
 @JsonRootName(value = "config")
 public class ClientConfigModel implements Serializable {
 
     private boolean same_enc_sign_cert;
-    private HashMap<String, String> keyAlg;
-    private HashMap<String, String> encAlg;
-    private HashMap<String, String> remotekeystore;
+    private Map<String, String> keyAlg;
+    private Map<String, String> encAlg;
+    private Map<String, String> remotekeystore;
     private String authURL;
     private String messageURL;
     private String renewURL;
@@ -29,12 +27,12 @@ public class ClientConfigModel implements Serializable {
     @JsonCreator
     public ClientConfigModel(
             @JsonProperty("same_enc_sign_cert") boolean same_enc_sign_cert,
-            @JsonProperty("keyAlg") HashMap<String, String> keyAlg,
-            @JsonProperty("encAlg") HashMap<String, String> encAlg,
+            @JsonProperty("keyAlg") Map<String, String> keyAlg,
+            @JsonProperty("encAlg") Map<String, String> encAlg,
             @JsonProperty("authURL") String authURL,
             @JsonProperty("messageURL") String messageURL,
             @JsonProperty("renewURL") String renewURL,
-            @JsonProperty("remotekeystore") HashMap<String,String> remotekeystore
+            @JsonProperty("remotekeystore") Map<String,String> remotekeystore
             ) {
         this.same_enc_sign_cert = same_enc_sign_cert;
         this.keyAlg = keyAlg;
@@ -51,12 +49,12 @@ public class ClientConfigModel implements Serializable {
     }
 
     @JsonGetter
-    public HashMap<String, String> getKeyAlg() {
+    public Map<String, String> getKeyAlg() {
         return keyAlg;
     }
 
     @JsonGetter
-    public HashMap<String, String> getEncAlg() {
+    public Map<String, String> getEncAlg() {
         return encAlg;
     }
 
@@ -76,11 +74,16 @@ public class ClientConfigModel implements Serializable {
     }
 
     @JsonGetter
-    public HashMap<String, String> getRemotekeystore() {
+    public Map<String, String> getRemotekeystore() {
         return remotekeystore;
     }
 
-    public void setRemotekeystore(HashMap<String, String> remotekeystore) {
+    @JsonSetter
+    public void setKeyAlg(Map<String,String> keyAlg) {
+        this.keyAlg = keyAlg;
+    }
+
+    public void setRemotekeystore(Map<String, String> remotekeystore) {
         this.remotekeystore = remotekeystore;
     }
 

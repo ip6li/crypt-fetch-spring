@@ -34,18 +34,7 @@ public abstract class ConfigurationBase {
 
     protected static final Properties config = new Properties();
     protected static File configFile;
-    protected static final String keystoreDefaultPassword;
-
-    static {
-        String tmpPassword = null;
-        try {
-            tmpPassword = PemUtils.createRandomPassword();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        keystoreDefaultPassword = tmpPassword;
-    }
-
+    protected static String keystoreDefaultPassword;
     private static final boolean BCFIPS = Boolean.parseBoolean(readFromVMoptions("bcfips", "false"));
 
 
@@ -53,7 +42,7 @@ public abstract class ConfigurationBase {
         if (config.isEmpty()) {
             try {
                 loadConfig();
-            } catch (IOException e) {
+            } catch (IOException | NoSuchAlgorithmException e) {
                 logger.error(String.format("Cannot load config file: %s%nLoading defaults", e.getMessage()));
             }
 
@@ -76,11 +65,18 @@ public abstract class ConfigurationBase {
     }
 
 
+    private static void setKeyStoreDefaultPassword (String p) {
+
+        keystoreDefaultPassword = p;
+    }
+
+
     private void loadConfig()
-            throws IOException {
+            throws IOException, NoSuchAlgorithmException {
         setConfigFile(Utils.findConfigFile(Constants.configFileName));
         logger.info(String.format("loadConfig: %s", configFile));
         if (configFile == null || !configFile.exists()) {
+            setKeyStoreDefaultPassword(PemUtils.createRandomPassword());
             logger.warn("loadConfig: No config file found, loading defaults");
             preInit();
             init();
@@ -88,6 +84,7 @@ public abstract class ConfigurationBase {
         } else {
             try (FileInputStream fileReader = new FileInputStream(configFile)) {
                 config.loadFromXML(fileReader);
+                setKeyStoreDefaultPassword(config.getProperty(Constants.d_serverKeystorePassword));
             } catch (Exception e) {
                 logger.error(String.format("loadConfig: %s", e.getMessage()));
             }

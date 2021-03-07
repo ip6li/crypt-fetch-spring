@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.security.cert.CertificateEncodingException;
 import java.util.HashMap;
+import java.util.Map;
 
 
 /*************************************************************************************************************
@@ -21,7 +22,9 @@ public class ClientConfig {
     private final ServerCertificate serverCertificate;
     private final CA ca;
     private static ClientConfig clientConfig = null;
-    private static ClientConfigModel configuration;
+    private static ClientConfigModel clientConfigModel;
+    private static final Configuration configuration = new Configuration();
+
 
 
     private ClientConfig(CA ca, ServerCertificate serverCertificate, InputStream defaultConfig)
@@ -74,15 +77,20 @@ public class ClientConfig {
 
 
     private void readConfiguration(InputStream json) throws IOException {
-        configuration = ClientConfigModel.deserialize(json);
-        HashMap<String,String> remotekeystore = configuration.getRemotekeystore();
+        clientConfigModel = ClientConfigModel.deserialize(json);
+        Map<String,String> remotekeystore = clientConfigModel.getRemotekeystore();
         remotekeystore.put(Constants.ca, ca.getCaCertificatePEM());
         try {
             remotekeystore.put(Constants.serverCert, serverCertificate.getServerCertificatePEM());
         } catch (CertificateEncodingException | IOException e) {
             logger.warn(e.getMessage());
         }
-        configuration.setRemotekeystore(remotekeystore);
+        clientConfigModel.setRemotekeystore(remotekeystore);
+
+        Map<String, String> keyAlg = clientConfigModel.getKeyAlg();
+        keyAlg.put("sign", configuration.getConfig().getProperty(Constants.prop_js_sign));
+        keyAlg.put("hash", configuration.getConfig().getProperty(Constants.prop_js_hash));
+        clientConfigModel.setKeyAlg(keyAlg);
     }
 
 
@@ -95,7 +103,7 @@ public class ClientConfig {
     public String getConfig()
             throws JsonProcessingException {
 
-        return new String(configuration.serialize());
+        return new String(clientConfigModel.serialize());
     }
 
     public static ClientConfigModel createDefaultConfig() throws IOException {
@@ -105,7 +113,6 @@ public class ClientConfig {
                 "    \"keyAlg\": {\n" +
                 "      \"hash\": \"SHA-256\",\n" +
                 "      \"sign\": \"RSASSA-PKCS1-V1_5\",\n" +
-                "      \"signDISABLED\": \"RSA-PSS\",\n" +
                 "      \"modulusLength\": 2048\n" +
                 "    },\n" +
                 "    \"encAlg\": {\n" +

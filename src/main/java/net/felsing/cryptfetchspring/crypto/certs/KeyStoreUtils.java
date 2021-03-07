@@ -1,5 +1,8 @@
 package net.felsing.cryptfetchspring.crypto.certs;
 
+import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
+
 import java.io.*;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -7,16 +10,9 @@ import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Enumeration;
 
-import net.felsing.cryptfetchspring.crypto.config.Constants;
-import net.felsing.cryptfetchspring.crypto.config.ProviderLoader;
-import net.felsing.cryptfetchspring.crypto.util.PemUtils;
-import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
 
 public final class KeyStoreUtils {
-    private static final Logger logger = LoggerFactory.getLogger(KeyStoreUtils.class);
+    private static final LogEngine logger = LogEngine.getLogger(KeyStoreUtils.class);
     private enum KS_MODE {KEYPAIR, CERTIFICATE}
 
     public static KeyStore loadKeystore(String keystoreFile, String keystorePassword) throws

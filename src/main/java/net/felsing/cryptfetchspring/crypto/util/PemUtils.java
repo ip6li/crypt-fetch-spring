@@ -266,8 +266,10 @@ public final class PemUtils {
 
     /**
      * Creates a random password as SHA-512 string.
-     * Fills an byze array with 64KByte random data
-     * and builds a SHA-512 hash about that array.
+     * Fills an byte array with 64KByte random data
+     * and builds a MD5 hash about that array.
+     *
+     * ToDo: SHA-512 generates too long passwords for keystore?
      *
      * @return A random hex string
      */
@@ -275,7 +277,7 @@ public final class PemUtils {
             throws NoSuchAlgorithmException {
         final int arrSize = 65536;
         final byte[] rndBytes = new byte[arrSize];
-        final MessageDigest md = MessageDigest.getInstance("SHA-512");
+        final MessageDigest md = MessageDigest.getInstance("MD5");
         final SecureRandom secureRandom = new SecureRandom();
         secureRandom.nextBytes(rndBytes);
         md.update(rndBytes);

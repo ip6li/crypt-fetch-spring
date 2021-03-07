@@ -3,7 +3,6 @@
     "same_enc_sign_cert": true,
     "keyAlg": {
       "hash": "SHA-256",
-      "signDISABLED": "RSASSA-PKCS1-V1_5",
       "sign": "RSA-PSS",
       "modulusLength": 2048
     },

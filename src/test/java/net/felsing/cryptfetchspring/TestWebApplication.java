@@ -36,6 +36,7 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -89,7 +90,7 @@ class TestWebApplication {
         String config = restTemplate.getForObject(url, String.class);
         InputStream targetStream = new ByteArrayInputStream(config.getBytes());
         ClientConfigModel clientConfigModel = ClientConfigModel.deserialize(targetStream);
-        HashMap<String, String> remotekeystore = clientConfigModel.getRemotekeystore();
+        Map<String, String> remotekeystore = clientConfigModel.getRemotekeystore();
         ca = remotekeystore.get("ca");
         final String serverCertificatePem = remotekeystore.get("server");
         serverCertificate = PemUtils.getCertificateFromPem(serverCertificatePem);
