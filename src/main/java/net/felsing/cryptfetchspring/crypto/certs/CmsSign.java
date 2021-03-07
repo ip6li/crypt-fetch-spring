@@ -35,7 +35,6 @@ import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.util.Store;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.Security;
@@ -188,7 +187,7 @@ public final class CmsSign {
             trustStore.forEach(k -> {
                 try {
                     ks.setCertificateEntry(k.getSubjectDN().getName(), k);
-                    logger.info(String.format("validateChain (trustStore)\n%s", PemUtils.encodeObjectToPEM(k)));
+                    logger.info(String.format("validateChain (trustStore)%n%s", PemUtils.encodeObjectToPEM(k)));
                 } catch (Exception e) {
                     verifyOk[0] = false;
                     logger.warn(String.format("validateChain: Cannot add CA certificate to trustchain: %s", e.getMessage()));
@@ -199,7 +198,7 @@ public final class CmsSign {
             JcaCertStoreBuilder builder = new JcaCertStoreBuilder();
             signers.forEach(k -> {
                 try {
-                    logger.info(String.format("validateChain (cert)\n%s", PemUtils.encodeObjectToPEM(k)));
+                    logger.info(String.format("validateChain (cert)%n%s", PemUtils.encodeObjectToPEM(k)));
                     builder.addCertificate(new X509CertificateHolder(k.getEncoded()));
                 } catch (CertificateEncodingException | IOException e) {
                     verifyOk[0] = false;

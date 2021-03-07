@@ -17,41 +17,47 @@
 
 package net.felsing.cryptfetchspring.crypto.config;
 
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
+import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+import net.felsing.cryptfetchspring.crypto.util.Utils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
 
 public abstract class ConfigurationBase {
-    private static final Logger logger = LoggerFactory.getLogger(ConfigurationBase.class);
+    private static final LogEngine logger = LogEngine.getLogger(ConfigurationBase.class);
 
     protected static final Properties config = new Properties();
-    private final String keystoreDefaultPassword;
+    protected static File configFile;
+    protected static final String configFileName = "crypt-fetch-spring.ini";
+    protected static final String keystoreDefaultPassword;
+
+    static {
+        String tmpPassword = "changeit";
+        try {
+            tmpPassword = PemUtils.createRandomPassword();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        keystoreDefaultPassword = tmpPassword;
+    }
 
     private static final boolean BCFIPS = Boolean.parseBoolean(readFromVMoptions("bcfips", "false"));
 
 
     ConfigurationBase() {
-        String tmpPassword;
-        try {
-            Properties properties = loadDefaultsIni();
-            tmpPassword = properties.getProperty("keystorePassword");
-        } catch (IOException e) {
-            logger.error(String.format("ConfigurationBase: %s", e.getMessage()));
-            tmpPassword = null;
-        }
-
-        keystoreDefaultPassword = tmpPassword;
         if (config.isEmpty()) {
-            preInit();
-            init();
+            try {
+                loadConfig();
+            } catch (IOException e) {
+                logger.error(String.format("Cannot load config file: %s%nLoading defaults", e.getMessage()));
+            }
+
         }
     }
 
@@ -66,23 +72,50 @@ public abstract class ConfigurationBase {
     }
 
 
-    protected String getKeystoreDefaultPassword() {
-
-        return keystoreDefaultPassword;
+    private static void setConfigFile(File file) {
+        configFile = file;
     }
 
 
-    private Properties loadDefaultsIni() throws IOException {
-        final String filename = "defaults.ini";
-        Properties prop = new Properties();
-
-        Resource configJsonFile = new ClassPathResource(filename);
-        File f = configJsonFile.getFile();
-
-        try (InputStream input = new FileInputStream(f)) {
-            prop.load(input);
-            return prop;
+    private void loadConfig()
+            throws IOException {
+        setConfigFile(Utils.findConfigFile(configFileName));
+        logger.info(String.format("loadConfig: %s", configFile));
+        if (configFile == null || !configFile.exists()) {
+            logger.warn("loadConfig: No config file found, loading defaults");
+            preInit();
+            init();
+            saveConfig();
+        } else {
+            try (FileInputStream fileReader = new FileInputStream(configFile)) {
+                config.loadFromXML(fileReader);
+            } catch (Exception e) {
+                logger.error(String.format("loadConfig: %s", e.getMessage()));
+            }
         }
+    }
+
+
+    public static void saveConfig()
+            throws IOException {
+        try {
+            logger.info(String.format("saveConfig: configFile found at %s", configFile.getAbsolutePath()));
+        } catch (Exception e) {
+            configFile = new File(configFileName);
+            logger.info("saveConfig: creating new config file");
+        }
+        try (FileOutputStream propsFile = new FileOutputStream(configFileName)) {
+            config.storeToXML(propsFile, "config");
+        } catch (IOException e) {
+            logger.error(String.format("saveConfig: %s", e.getMessage()));
+            throw new IOException(e);
+        }
+    }
+
+
+    protected String getKeystoreDefaultPassword() {
+
+        return keystoreDefaultPassword;
     }
 
 
@@ -95,9 +128,9 @@ public abstract class ConfigurationBase {
         } else {
             sb.append("==> ").append(key).append(" set to ").append(value);
         }
-        if (logger.isInfoEnabled()) {
-            logger.info(sb.toString());
-        }
+
+        logger.info(sb.toString());
+
         return value;
     }
 

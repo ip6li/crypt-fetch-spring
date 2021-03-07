@@ -62,4 +62,19 @@ public final class Constants {
 
     public final static int[] allowedSanTypes = {0, 1, 2, 6, 7};
 
+    // Properties names
+    public final static String prop_js_sign = "js.sign";
+    public final static String prop_keyMode = "keyMode";
+    public final static String prop_server_DN = "server.DN";
+    public final static String prop_signer_DN = "signer.DN";
+    public final static String prop_caFile = "caFile";
+    public final static String prop_js_url = "js.url";
+    public final static String prop_js_hash = "js.hash";
+    public final static String prop_keyStorePassword = "keyStorePassword";
+    public final static String prop_ca_dnSuffix = "ca.dnSuffix";
+    public final static String prop_ca_dnPrefix = "ca.dnPrefix";
+    public final static String prop_ca_days = "ca.days";
+    public final static String prop_server_days = "server.days";
+    public final static String prop_signer_days = "signer.days";
+    public final static String prop_certificate_days = "certificate.days";
 }

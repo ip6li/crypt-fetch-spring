@@ -14,7 +14,7 @@ import java.security.spec.ECGenParameterSpec;
 
 
 public final class KeyUtils {
-    private static final LogEngine logger = LogEngine.getLogger(KeyStoreUtils.class);
+    private static final LogEngine logger = LogEngine.getLogger(KeyUtils.class);
 
     public static final String RSA = "RSA";
     public static final String RSAPSS = "RSASSA-PSS";

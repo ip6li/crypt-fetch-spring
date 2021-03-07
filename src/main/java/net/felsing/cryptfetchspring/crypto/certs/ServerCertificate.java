@@ -58,6 +58,7 @@ public final class ServerCertificate {
             InvalidAlgorithmParameterException, NoSuchProviderException, IOException,
             CertificateException, InvalidKeySpecException {
 
+        logger.trace("generate: start generating CSR");
         if (validForDays==0) { // 0 for default of 1 year
             validForDays = 365;
         }
@@ -87,7 +88,7 @@ public final class ServerCertificate {
             );
 
             x509ServerCertificate = PemUtils.getCertificateFromPem (signedCertificate);
-
+            logger.trace("generate: CSR generated");
     }
 
 

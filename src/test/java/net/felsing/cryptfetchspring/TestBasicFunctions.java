@@ -3,7 +3,8 @@ package net.felsing.cryptfetchspring;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.certs.*;
-import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
+import net.felsing.cryptfetchspring.crypto.config.ClientConfig;
+import net.felsing.cryptfetchspring.crypto.config.ClientConfigModel;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.LogEngine;
@@ -60,8 +61,8 @@ class TestBasicFunctions {
 
     @Test
     void testServerConfig() {
-        final ServerConfig localServerConfig = ServerConfig.getServerConfig();
-        assertNotNull(localServerConfig);
+        final ClientConfig localClientConfig = ClientConfig.getServerConfig();
+        assertNotNull(localClientConfig);
     }
 
     @Test
@@ -182,7 +183,7 @@ class TestBasicFunctions {
 
     @Test
     void testDefaultConfig() throws IOException {
-        final ConfigModel configMap = ServerConfig.createDefaultConfig();
+        final ClientConfigModel configMap = ClientConfig.createDefaultConfig();
         assertTrue(configMap.getAuthURL().length() > 0);
     }
 
@@ -252,4 +253,10 @@ class TestBasicFunctions {
         logger.info(deserialize.getS2());
     }
 
+    @Test
+    void testCreateRandomPassword() throws NoSuchAlgorithmException {
+        String randomPassword = PemUtils.createRandomPassword();
+        logger.info(String.format("%s", randomPassword));
+        assertNotNull(randomPassword);
+    }
 }

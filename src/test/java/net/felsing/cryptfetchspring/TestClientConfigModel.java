@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
+import net.felsing.cryptfetchspring.crypto.config.ClientConfigModel;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -15,9 +15,9 @@ import java.util.HashMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-public class TestConfigModel {
-    Logger logger = LoggerFactory.getLogger(TestConfigModel.class);
-    private static ConfigModel configModel;
+public class TestClientConfigModel {
+    Logger logger = LoggerFactory.getLogger(TestClientConfigModel.class);
+    private static ClientConfigModel clientConfigModel;
 
     @BeforeAll
     static void init() {
@@ -34,7 +34,7 @@ public class TestConfigModel {
         HashMap<String, String> remotekeystore = new HashMap<>();
         //remotekeystore.put("key", "value");
 
-        configModel = new ConfigModel(
+        clientConfigModel = new ClientConfigModel(
                 true,
                 keyAlg,
                 encAlg,
@@ -50,22 +50,22 @@ public class TestConfigModel {
         String json = configModel2Json();
         logger.info(json);
 
-        ConfigModel configModel1 = json2configModel(json);
-        assertEquals("SHA-256", configModel1.getKeyAlg().get("hash"));
+        ClientConfigModel clientConfigModel1 = json2configModel(json);
+        assertEquals("SHA-256", clientConfigModel1.getKeyAlg().get("hash"));
     }
 
 
     private String configModel2Json() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
-        return mapper.writeValueAsString(configModel);
+        return mapper.writeValueAsString(clientConfigModel);
     }
 
-    private ConfigModel json2configModel(String json) throws JsonProcessingException {
+    private ClientConfigModel json2configModel(String json) throws JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
         om.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
         return om
-                .readerFor(ConfigModel.class)
+                .readerFor(ClientConfigModel.class)
                 .readValue(json);
     }
 

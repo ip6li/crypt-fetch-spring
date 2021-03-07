@@ -9,7 +9,7 @@ import net.felsing.cryptfetchspring.crypto.certs.Certificates;
 import net.felsing.cryptfetchspring.crypto.certs.CmsSign;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.EncryptAndDecrypt;
-import net.felsing.cryptfetchspring.crypto.config.ConfigModel;
+import net.felsing.cryptfetchspring.crypto.config.ClientConfigModel;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.LogEngine;
@@ -83,13 +83,13 @@ class TestWebApplication {
     }
 
 
-    private void loadConfig2()
+    private void loadConfig()
             throws IOException, CertificateException {
         final String url = String.format("http://localhost:%d/config", port);
         String config = restTemplate.getForObject(url, String.class);
         InputStream targetStream = new ByteArrayInputStream(config.getBytes());
-        ConfigModel configModel = ConfigModel.deserialize(targetStream);
-        HashMap<String, String> remotekeystore = configModel.getRemotekeystore();
+        ClientConfigModel clientConfigModel = ClientConfigModel.deserialize(targetStream);
+        HashMap<String, String> remotekeystore = clientConfigModel.getRemotekeystore();
         ca = remotekeystore.get("ca");
         final String serverCertificatePem = remotekeystore.get("server");
         serverCertificate = PemUtils.getCertificateFromPem(serverCertificatePem);
@@ -158,7 +158,7 @@ class TestWebApplication {
 
     @Test
     void testLogin() throws Exception {
-        loadConfig2();
+        loadConfig();
 
         final String username = "myUserName";
         final String password = "myPassword";

@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 @JsonRootName(value = "config")
-public class ConfigModel implements Serializable {
+public class ClientConfigModel implements Serializable {
 
     private boolean same_enc_sign_cert;
     private HashMap<String, String> keyAlg;
@@ -27,7 +27,7 @@ public class ConfigModel implements Serializable {
     private String renewURL;
 
     @JsonCreator
-    public ConfigModel (
+    public ClientConfigModel(
             @JsonProperty("same_enc_sign_cert") boolean same_enc_sign_cert,
             @JsonProperty("keyAlg") HashMap<String, String> keyAlg,
             @JsonProperty("encAlg") HashMap<String, String> encAlg,
@@ -90,9 +90,9 @@ public class ConfigModel implements Serializable {
         return mapper.writeValueAsString(this).getBytes(StandardCharsets.UTF_8);
     }
 
-    public static ConfigModel deserialize(InputStream json) throws IOException {
+    public static ClientConfigModel deserialize(InputStream json) throws IOException {
         ObjectMapper om = new ObjectMapper();
         om.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);
-        return om.readerFor(ConfigModel.class).readValue(json);
+        return om.readerFor(ClientConfigModel.class).readValue(json);
     }
 }

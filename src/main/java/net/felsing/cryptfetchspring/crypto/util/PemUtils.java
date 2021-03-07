@@ -6,6 +6,7 @@ import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,10 @@ import java.security.cert.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /****************************************************************************************************************
@@ -26,13 +31,14 @@ import java.util.Base64;
 public final class PemUtils {
     private static final Logger logger = LoggerFactory.getLogger(PemUtils.class);
 
-    private PemUtils () {}
+    private PemUtils() {
+    }
 
     /**
      * Utilities to encode different X.509/Key objects to PEM
      *
-     * @param pem                   pem encoded data
-     * @return                      DER encoded data
+     * @param pem pem encoded data
+     * @return DER encoded data
      */
     public static byte[] parseDERfromPEM(byte[] pem) {
         String begin = "-----BEGIN.*?-----";
@@ -47,43 +53,43 @@ public final class PemUtils {
     }
 
 
-    public static String encodeObjectToPEM (X509Certificate crt) throws CertificateEncodingException, IOException {
+    public static String encodeObjectToPEM(X509Certificate crt) throws CertificateEncodingException, IOException {
 
         return internalEncodeObjectToPEM(crt);
     }
 
 
-    public static String encodeObjectToPEM (Certificate crt) throws CertificateEncodingException, IOException {
+    public static String encodeObjectToPEM(Certificate crt) throws CertificateEncodingException, IOException {
 
         return internalEncodeObjectToPEM(crt);
     }
 
 
-    public static String encodeObjectToPEM (CMSEnvelopedData cms) throws CertificateEncodingException, IOException {
+    public static String encodeObjectToPEM(CMSEnvelopedData cms) throws CertificateEncodingException, IOException {
 
         return internalEncodeObjectToPEM(cms);
     }
 
 
-    public static String encodeObjectToPEM (CMSSignedData cms) throws CertificateEncodingException, IOException {
+    public static String encodeObjectToPEM(CMSSignedData cms) throws CertificateEncodingException, IOException {
 
         return internalEncodeObjectToPEM(cms);
     }
 
 
-    public static String encodeObjectToPEM (PKCS10CertificationRequest pkcs10) throws CertificateEncodingException, IOException {
+    public static String encodeObjectToPEM(PKCS10CertificationRequest pkcs10) throws CertificateEncodingException, IOException {
 
         return internalEncodeObjectToPEM(pkcs10);
     }
 
 
-    public static String encodeObjectToPEM (PrivateKey key) throws CertificateEncodingException, IOException {
+    public static String encodeObjectToPEM(PrivateKey key) throws CertificateEncodingException, IOException {
 
         return internalEncodeObjectToPEM(key);
     }
 
 
-    public static String encodeObjectToPEM (PublicKey key) throws CertificateEncodingException, IOException {
+    public static String encodeObjectToPEM(PublicKey key) throws CertificateEncodingException, IOException {
 
         return internalEncodeObjectToPEM(key);
     }
@@ -91,17 +97,17 @@ public final class PemUtils {
 
     /**
      * Converts following object types into PEM format:
-     *      X509Certificate
-     *      Certificate
-     *      CMSEnvelopedData
-     *      CMSSignedData
-     *      PKCS10CertificationRequest
-     *      PrivateKey
-     *      PublicKey
+     * X509Certificate
+     * Certificate
+     * CMSEnvelopedData
+     * CMSSignedData
+     * PKCS10CertificationRequest
+     * PrivateKey
+     * PublicKey
      *
-     * @param o         object of type listed above
-     * @return          PEM encoded representation
-     * @throws CertificateEncodingException     if o is not an supported type
+     * @param o object of type listed above
+     * @return PEM encoded representation
+     * @throws CertificateEncodingException if o is not an supported type
      */
     private static String internalEncodeObjectToPEM(Object o) throws CertificateEncodingException, IOException {
         StringWriter sw = new StringWriter();
@@ -182,8 +188,8 @@ public final class PemUtils {
     /**
      * Parses PEM encoded X.509 certificate and returns X509Certificate instance.
      *
-     * @param pem               PEM encoded X.509 certificate
-     * @return                  X509Certificate
+     * @param pem PEM encoded X.509 certificate
+     * @return X509Certificate
      */
     public static X509Certificate getCertificateFromPem(String pem)
             throws CertificateException {
@@ -196,21 +202,21 @@ public final class PemUtils {
     /**
      * Parses PEM encoded private key and returns RSAPrivateKey instance.
      *
-     * @param pem               PEM encoded private key
-     * @return                  RSAPrivateKey
+     * @param pem PEM encoded private key
+     * @return RSAPrivateKey
      */
     private static PrivateKey getRsaPrivateKeyFromPem(String pem)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
-            KeyFactory kf = KeyFactory.getInstance("RSA");
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(parseDERfromPEM(pem.getBytes()));
-            return kf.generatePrivate(keySpec);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(parseDERfromPEM(pem.getBytes()));
+        return kf.generatePrivate(keySpec);
     }
 
     private static PrivateKey getEcPrivateKeyFromPem(String pem)
             throws NoSuchAlgorithmException, InvalidKeySpecException {
-            KeyFactory kf = KeyFactory.getInstance("EC");
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(parseDERfromPEM(pem.getBytes()));
-            return kf.generatePrivate(keySpec);
+        KeyFactory kf = KeyFactory.getInstance("EC");
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(parseDERfromPEM(pem.getBytes()));
+        return kf.generatePrivate(keySpec);
     }
 
     public static PrivateKey getPrivateKeyFromPem(String pem)
@@ -225,7 +231,7 @@ public final class PemUtils {
             return getEcPrivateKeyFromPem(pem);
         } catch (InvalidKeySpecException e) {
             logger.debug(String.format("getPrivateKeyFromPem (EC): %s", e.getMessage()));
-            throw new InvalidKeySpecException(e);
+            throw e;
         }
     }
 
@@ -233,11 +239,11 @@ public final class PemUtils {
      * Parses PEM encoded private key/certificate and
      * returns KeyPair instance.
      *
-     * @param pemPrivateKey     PEM encoded private key
-     * @param pemCert           PEM encoded X.509 certificate
-     * @return                  KeyPair
+     * @param pemPrivateKey PEM encoded private key
+     * @param pemCert       PEM encoded X.509 certificate
+     * @return KeyPair
      */
-    public static KeyPair getKeyPair (String pemPrivateKey, String pemCert)
+    public static KeyPair getKeyPair(String pemPrivateKey, String pemCert)
             throws CertificateException, NoSuchAlgorithmException, InvalidKeySpecException {
         X509Certificate x509cert = getCertificateFromPem(pemCert);
         PublicKey publicKey = x509cert.getPublicKey();
@@ -252,9 +258,9 @@ public final class PemUtils {
      * It is good for creating e.g. certificate serial numbers.
      * Think twice before using it for passwords.
      *
-     * @param allowedChars      Array of allowed characters
-     * @param len               Length of random word
-     * @return                  A random String
+     * @param allowedChars Array of allowed characters
+     * @param len          Length of random word
+     * @return A random String
      */
     public static String getRandom(byte[] allowedChars, int len) {
         SecureRandom secureRandom = new SecureRandom();
@@ -266,25 +272,39 @@ public final class PemUtils {
         return rnd.toString();
     }
 
+    /**
+     * Creates a random password as SHA-512 string.
+     *
+     * @return A random String
+     */
+    public static String createRandomPassword()
+            throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("SHA-512");
+        SecureRandom secureRandom = new SecureRandom();
+        for (int i = 0; i < 65536; i++) {
+            md.update((byte) secureRandom.nextInt(255));
+        }
+        return Hex.toHexString(md.digest());
+    }
 
     /**
      * Converts PEM encoded PKCS#10 request to PKCS10CertificationRequest
      *
-     * @param pem               PEM encoded PKCS#10 request
-     * @return                  PKCS10CertificationRequest or Exception
+     * @param pem PEM encoded PKCS#10 request
+     * @return PKCS10CertificationRequest or Exception
      */
     public static PKCS10CertificationRequest convertPemToPKCS10CertificationRequest(String pem)
             throws IOException {
 
-        return convertPemToPKCS10CertificationRequest (pem.getBytes(StandardCharsets.UTF_8));
+        return convertPemToPKCS10CertificationRequest(pem.getBytes(StandardCharsets.UTF_8));
     }
 
 
     /**
      * Converts PEM encoded PKCS#10 request to PKCS10CertificationRequest
      *
-     * @param pem               PEM encoded PKCS#10 request
-     * @return                  PKCS10CertificationRequest or Exception
+     * @param pem PEM encoded PKCS#10 request
+     * @return PKCS10CertificationRequest or Exception
      */
     public static PKCS10CertificationRequest convertPemToPKCS10CertificationRequest(byte[] pem)
             throws IOException {
@@ -292,7 +312,7 @@ public final class PemUtils {
         ByteArrayInputStream pemStream;
         pemStream = new ByteArrayInputStream(pem);
 
-        try(Reader pemReader = new BufferedReader(new InputStreamReader(pemStream))) {
+        try (Reader pemReader = new BufferedReader(new InputStreamReader(pemStream))) {
             PEMParser pemParser = new PEMParser(pemReader);
             Object parsedObj = pemParser.readObject();
 

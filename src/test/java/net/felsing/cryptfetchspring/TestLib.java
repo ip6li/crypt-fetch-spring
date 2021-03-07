@@ -3,6 +3,7 @@ package net.felsing.cryptfetchspring;
 import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
+import net.felsing.cryptfetchspring.crypto.config.ClientConfig;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.LogEngine;
@@ -36,7 +37,7 @@ public class TestLib {
         ca = CryptInit.getInstance(caRootPath);
         logger.info(String.format("caRootPath: %s", caRootPath));
         ca.setOcspCritical(false);
-        ServerConfig.getInstance(ca, CryptInit.getServerCertificate());
+        ClientConfig.getInstance(ca, CryptInit.getServerCertificate());
         config = new Configuration();
     }
 

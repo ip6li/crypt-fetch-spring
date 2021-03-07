@@ -51,7 +51,7 @@ public class CryptInit {
         final String CAFILE = "caFile";
         properties = new Configuration().getConfig();
         final File caFile = new File(String.format("%s/%s", servletRootPath, properties.getProperty(CAFILE)));
-        final String keyStorePassword = properties.getProperty("keyStorePassword");
+        final String keyStorePassword = properties.getProperty(Constants.d_serverKeystorePassword);
         Constants.KeyType mode = Constants.KeyType.valueOf(properties.getProperty("keyMode"));
         logger.info(String.format("initPKIinfrastructure: %s", mode));
 

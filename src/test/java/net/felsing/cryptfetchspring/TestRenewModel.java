@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class TestRenewModel {
-    Logger logger = LoggerFactory.getLogger(TestConfigModel.class);
+    Logger logger = LoggerFactory.getLogger(TestClientConfigModel.class);
 
     @Test
     void test() throws JsonProcessingException {

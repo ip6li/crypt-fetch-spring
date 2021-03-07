@@ -17,6 +17,11 @@
 
 package net.felsing.cryptfetchspring.crypto.config;
 
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
+import net.felsing.cryptfetchspring.crypto.util.PemUtils;
+
+import java.security.NoSuchAlgorithmException;
+
 /**
  * This class provides configuration properties, which can be used to get
  * as Properties or JsonObject. Properties with prefix "js." are provided
@@ -28,7 +33,6 @@ package net.felsing.cryptfetchspring.crypto.config;
  */
 
 public final class Configuration extends ConfigurationBase {
-
     public enum BC_TYPE {BC, BCFIPS}
 
     private static final Constants.KeyType keyType = Constants.KeyType.EC;
@@ -37,38 +41,39 @@ public final class Configuration extends ConfigurationBase {
     @Override
     protected void init() {
         final int oneYear = 365;
-        config.setProperty("js.url", readFromVMoptions("url", "index"));
-        config.setProperty("js.hash", "SHA-256");
 
-        config.setProperty("keyStorePassword", getKeystoreDefaultPassword());
-        config.setProperty("ca.dnSuffix", "O=Honest Achmed,OU=Used Cars,C=DE");
-        config.setProperty("ca.dnPrefix", "CN=Honest Achmets trustworthy CA");
-        config.setProperty("ca.days", Long.toString(30L * oneYear));
-        config.setProperty("server.days", Integer.toString(10 * oneYear));
-        config.setProperty("signer.days", Integer.toString(10 * oneYear));
-        config.setProperty("certificate.days", Integer.toString(1));
+        config.setProperty(Constants.prop_js_url, readFromVMoptions("url", "index"));
+        config.setProperty(Constants.prop_js_hash, "SHA-256");
+
+        // who is Honest Achmet? See https://bugzilla.mozilla.org/show_bug.cgi?id=647959
+        config.setProperty(Constants.prop_ca_dnSuffix, "O=Honest Achmed,OU=Used Cars,C=DE");
+        config.setProperty(Constants.prop_ca_dnPrefix, "CN=Honest Achmets trustworthy CA");
+        config.setProperty(Constants.prop_ca_days, Long.toString(30L * oneYear));
+        config.setProperty(Constants.prop_server_days, Integer.toString(10 * oneYear));
+        config.setProperty(Constants.prop_signer_days, Integer.toString(10 * oneYear));
+        config.setProperty(Constants.prop_certificate_days, Integer.toString(1));
 
         switch (keyType) {
             case EC:
-                config.setProperty("js.sign", "ECDSA");
-                config.setProperty("keyMode", Constants.KeyType.EC.toString());
-                config.setProperty("server.DN", "CN=The server certificate ECDSA");
-                config.setProperty("signer.DN", "CN=The signer certificate ECDSA");
-                config.setProperty("caFile", "CA-ECDSA.p12");
+                config.setProperty(Constants.prop_js_sign, "ECDSA");
+                config.setProperty(Constants.prop_keyMode, Constants.KeyType.EC.toString());
+                config.setProperty(Constants.prop_server_DN, "CN=The server certificate ECDSA");
+                config.setProperty(Constants.prop_signer_DN, "CN=The signer certificate ECDSA");
+                config.setProperty(Constants.prop_caFile, "CA-ECDSA.p12");
                 break;
             case RSA:
-                config.setProperty("js.sign", "RSASSA-PKCS1-V1_5");
-                config.setProperty("keyMode", Constants.KeyType.RSA.toString());
-                config.setProperty("server.DN", "CN=The server certificate RSA");
-                config.setProperty("signer.DN", "CN=The signer certificate RSA");
-                config.setProperty("caFile", "CA-RSA.p12");
+                config.setProperty(Constants.prop_js_sign, "RSASSA-PKCS1-V1_5");
+                config.setProperty(Constants.prop_keyMode, Constants.KeyType.RSA.toString());
+                config.setProperty(Constants.prop_server_DN, "CN=The server certificate RSA");
+                config.setProperty(Constants.prop_signer_DN, "CN=The signer certificate RSA");
+                config.setProperty(Constants.prop_caFile, "CA-RSA.p12");
                 break;
             case RSAPSS:
-                config.setProperty("js.sign", "RSASSA-PSS");
-                config.setProperty("keyMode", Constants.KeyType.RSAPSS.toString());
-                config.setProperty("server.DN", "CN=The server certificate RSA");
-                config.setProperty("signer.DN", "CN=The signer certificate RSA");
-                config.setProperty("caFile", "CA-RSA.p12");
+                config.setProperty(Constants.prop_js_sign, "RSASSA-PSS");
+                config.setProperty(Constants.prop_keyMode, Constants.KeyType.RSAPSS.toString());
+                config.setProperty(Constants.prop_server_DN, "CN=The server certificate RSA");
+                config.setProperty(Constants.prop_signer_DN, "CN=The signer certificate RSA");
+                config.setProperty(Constants.prop_caFile, "CA-RSA.p12");
                 break;
         }
     }

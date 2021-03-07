@@ -46,3 +46,5 @@ build/
 
 ### Other ###
 *.p12
+crypt-fetch-spring.ini
+

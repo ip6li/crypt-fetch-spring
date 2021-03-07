@@ -2,10 +2,10 @@ package net.felsing.cryptfetchspring;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.felsing.cryptfetchspring.crypto.certs.CA;
+import net.felsing.cryptfetchspring.crypto.config.ClientConfig;
+import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.login.Login;
 import net.felsing.cryptfetchspring.models.ErrorModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,11 +28,11 @@ import java.util.Map;
 @SpringBootApplication
 @RestController
 public class CryptFetchSpringApplication implements ServletContextAware {
-    private static final Logger logger = LoggerFactory.getLogger(CryptFetchSpringApplication.class);
+    private static final LogEngine logger = LogEngine.getLogger(CryptFetchSpringApplication.class);
 
     private static final String ERROR = "error";
 
-    private static ServerConfig serverConfig;
+    private static ClientConfig clientConfig;
     private ServletContext servletContext;
 
     @Value("${pki.path}")
@@ -46,21 +46,19 @@ public class CryptFetchSpringApplication implements ServletContextAware {
 
     private void createDir() throws IOException {
         File filePkiPath = new File(caRootPath);
-        if (!filePkiPath.isDirectory()) {
-            if (!filePkiPath.mkdir()) {
-                throw new IOException(String.format("Cannot create dir %s", caRootPath));
-            }
+        if (!filePkiPath.isDirectory() && !filePkiPath.mkdir()) {
+            throw new IOException(String.format("Cannot create dir %s", caRootPath));
         }
     }
 
 
-    private static void setServerConfig (CA ca) throws IOException {
+    private static void setServerConfig(CA ca) throws IOException {
         final String configJsonFile = "config.json";
         ClassPathResource resource = new ClassPathResource(configJsonFile);
-        if(!resource.exists()){
+        if (!resource.exists()) {
             logger.info(String.format("%s file does not exist.", configJsonFile));
         }
-        serverConfig = ServerConfig.getInstance(
+        clientConfig = ClientConfig.getInstance(
                 ca,
                 CryptInit.getServerCertificate(),
                 resource.getInputStream()
@@ -73,10 +71,9 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         try {
             createDir();
             String absolutePath = servletContext.getRealPath("resources");
-            if (logger.isInfoEnabled()) {
-                logger.info(String.format("[addInitHooks] absolutePath: %s", absolutePath));
-                logger.info(String.format("caRootPath: %s", caRootPath));
-            }
+
+            logger.info(String.format("[addInitHooks] absolutePath: %s", absolutePath));
+            logger.info(String.format("caRootPath: %s", caRootPath));
 
             CA ca = CryptInit.getInstance(caRootPath);
             setServerConfig(ca);
@@ -90,14 +87,14 @@ public class CryptFetchSpringApplication implements ServletContextAware {
     @GetMapping(value = "/config")
     public String getConfig() throws JsonProcessingException {
         // Deliver server/ca certificate and urls for further operations
-        return serverConfig.getConfig();
+        return clientConfig.getConfig();
     }
 
 
     @PostMapping(value = "/config")
     public String getConfigPost() throws JsonProcessingException {
         // Deliver server/ca certificate and urls for further operations
-        return serverConfig.getConfig();
+        return clientConfig.getConfig();
     }
 
     @PostMapping(value = "/login")
