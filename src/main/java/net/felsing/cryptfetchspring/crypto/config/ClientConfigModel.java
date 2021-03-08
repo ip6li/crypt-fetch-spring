@@ -24,6 +24,12 @@ public class ClientConfigModel implements Serializable {
     private String messageURL;
     private String renewURL;
 
+    public ClientConfigModel() {
+        keyAlg = new HashMap<>();
+        encAlg = new HashMap<>();
+        remotekeystore = new HashMap<>();
+    }
+
     @JsonCreator
     public ClientConfigModel(
             @JsonProperty("same_enc_sign_cert") boolean same_enc_sign_cert,
@@ -81,6 +87,31 @@ public class ClientConfigModel implements Serializable {
     @JsonSetter
     public void setKeyAlg(Map<String,String> keyAlg) {
         this.keyAlg = keyAlg;
+    }
+
+    @JsonSetter
+    public void setEncAlg(Map<String,String> encAlg) {
+        this.encAlg = encAlg;
+    }
+
+    @JsonSetter
+    public void setSame_enc_sign_cert(boolean same_enc_sign_cert) {
+        this.same_enc_sign_cert = same_enc_sign_cert;
+    }
+
+    @JsonSetter
+    public void setAuthURL(String authURL) {
+        this.authURL = authURL;
+    }
+
+    @JsonSetter
+    public void setMessageURL(String messageURL) {
+        this.messageURL = messageURL;
+    }
+
+    @JsonSetter
+    public void setRenewURL(String renewURL) {
+        this.renewURL = renewURL;
     }
 
     public void setRemotekeystore(Map<String, String> remotekeystore) {

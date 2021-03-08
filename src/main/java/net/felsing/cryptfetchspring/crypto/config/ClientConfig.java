@@ -78,6 +78,7 @@ public class ClientConfig {
 
     private void readConfiguration(InputStream json) throws IOException {
         clientConfigModel = ClientConfigModel.deserialize(json);
+        //clientConfigModel = new ClientConfigModel();
         Map<String,String> remotekeystore = clientConfigModel.getRemotekeystore();
         remotekeystore.put(Constants.ca, ca.getCaCertificatePEM());
         try {
@@ -87,10 +88,25 @@ public class ClientConfig {
         }
         clientConfigModel.setRemotekeystore(remotekeystore);
 
+        /*
+        clientConfigModel.setSame_enc_sign_cert(
+                Boolean.parseBoolean(configuration.getConfig().getProperty(Constants.prop_js_same_enc_sign_cert))
+        );
+        clientConfigModel.setAuthURL(configuration.getConfig().getProperty(Constants.prop_js_authURL));
+        clientConfigModel.setRenewURL(configuration.getConfig().getProperty(Constants.prop_js_renewURL));
+        clientConfigModel.setMessageURL(configuration.getConfig().getProperty(Constants.prop_js_messageURL));
+
         Map<String, String> keyAlg = clientConfigModel.getKeyAlg();
         keyAlg.put("sign", configuration.getConfig().getProperty(Constants.prop_js_sign));
         keyAlg.put("hash", configuration.getConfig().getProperty(Constants.prop_js_hash));
+        keyAlg.put("modulusLength", configuration.getConfig().getProperty(Constants.prop_js_modulusLength));
         clientConfigModel.setKeyAlg(keyAlg);
+
+        Map<String, String> encAlg = clientConfigModel.getEncAlg();
+        keyAlg.put("sign", configuration.getConfig().getProperty(Constants.prop_js_sign));
+        keyAlg.put("hash", configuration.getConfig().getProperty(Constants.prop_js_hash));
+        clientConfigModel.setEncAlg(encAlg);
+        */
     }
 
 

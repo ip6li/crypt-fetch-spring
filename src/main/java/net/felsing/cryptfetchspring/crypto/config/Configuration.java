@@ -43,7 +43,11 @@ public final class Configuration extends ConfigurationBase {
         final int oneYear = 365;
 
         config.setProperty(Constants.prop_js_url, readFromVMoptions("url", "index"));
+        config.setProperty(Constants.prop_js_same_enc_sign_cert, "same_enc_sign_cert");
         config.setProperty(Constants.prop_js_hash, "SHA-256");
+        config.setProperty(Constants.prop_js_modulusLength, "2048");
+        config.setProperty(Constants.prop_js_enc_name, "AES-CBC");
+        config.setProperty(Constants.prop_js_enc_length, "256");
 
         // who is Honest Achmet? See https://bugzilla.mozilla.org/show_bug.cgi?id=647959
         config.setProperty(Constants.prop_ca_dnSuffix, "O=Honest Achmed,OU=Used Cars,C=DE");
