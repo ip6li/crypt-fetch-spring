@@ -86,12 +86,12 @@ public class ClientConfigModel implements Serializable {
 
     @JsonSetter
     public void setKeyAlg(Map<String,String> keyAlg) {
-        this.keyAlg = keyAlg;
+        keyAlg.forEach((k, v) -> this.keyAlg.put(k, v));
     }
 
     @JsonSetter
     public void setEncAlg(Map<String,String> encAlg) {
-        this.encAlg = encAlg;
+        encAlg.forEach((k, v) -> this.encAlg.put(k, v));
     }
 
     @JsonSetter

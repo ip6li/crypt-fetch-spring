@@ -4,14 +4,17 @@ import net.felsing.cryptfetchspring.crypto.certs.CA;
 import net.felsing.cryptfetchspring.crypto.certs.Csr;
 import net.felsing.cryptfetchspring.crypto.certs.Signer;
 import net.felsing.cryptfetchspring.crypto.config.ClientConfig;
+import net.felsing.cryptfetchspring.crypto.config.ClientConfigModel;
 import net.felsing.cryptfetchspring.crypto.config.Configuration;
 import net.felsing.cryptfetchspring.crypto.config.Constants;
 import net.felsing.cryptfetchspring.crypto.util.LogEngine;
 import net.felsing.cryptfetchspring.crypto.util.PemUtils;
 import org.bouncycastle.operator.OperatorCreationException;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -112,6 +115,29 @@ public class TestLib {
             }
         }
         return dir.delete();
+    }
+
+    public static ClientConfigModel createDefaultConfig() throws IOException {
+        String json = "{\n" +
+                "  \"config\": {\n" +
+                "    \"same_enc_sign_cert\": true,\n" +
+                "    \"keyAlg\": {\n" +
+                "      \"hash\": \"SHA-256\",\n" +
+                "      \"sign\": \"RSASSA-PKCS1-V1_5\",\n" +
+                "      \"modulusLength\": 2048\n" +
+                "    },\n" +
+                "    \"encAlg\": {\n" +
+                "      \"name\": \"AES-CBC\",\n" +
+                "      \"length\": 256\n" +
+                "    },\n" +
+                "    \"remotekeystore\": {},\n" +
+                "    \"authURL\": \"http://127.0.0.1:8080/login\",\n" +
+                "    \"messageURL\": \"http://127.0.0.1:8080/message\",\n" +
+                "    \"renewURL\": \"http://127.0.0.1:8080/renew\"\n" +
+                "  }\n" +
+                "}";
+        InputStream jsonStream = new ByteArrayInputStream(json.getBytes());
+        return ClientConfigModel.deserialize(jsonStream);
     }
 
 }

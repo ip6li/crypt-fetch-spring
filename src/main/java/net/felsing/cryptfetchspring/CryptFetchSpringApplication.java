@@ -60,8 +60,7 @@ public class CryptFetchSpringApplication implements ServletContextAware {
         }
         clientConfig = ClientConfig.getInstance(
                 ca,
-                CryptInit.getServerCertificate(),
-                resource.getInputStream()
+                CryptInit.getServerCertificate()
         );
     }
 

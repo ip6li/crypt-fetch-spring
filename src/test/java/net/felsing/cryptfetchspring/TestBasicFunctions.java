@@ -183,7 +183,7 @@ class TestBasicFunctions {
 
     @Test
     void testDefaultConfig() throws IOException {
-        final ClientConfigModel configMap = ClientConfig.createDefaultConfig();
+        final ClientConfigModel configMap = TestLib.createDefaultConfig();
         assertTrue(configMap.getAuthURL().length() > 0);
     }
 

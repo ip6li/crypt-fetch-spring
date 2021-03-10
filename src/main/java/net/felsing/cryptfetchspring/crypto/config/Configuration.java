@@ -43,7 +43,7 @@ public final class Configuration extends ConfigurationBase {
         final int oneYear = 365;
 
         config.setProperty(Constants.prop_js_url, readFromVMoptions("url", "index"));
-        config.setProperty(Constants.prop_js_same_enc_sign_cert, "same_enc_sign_cert");
+        config.setProperty(Constants.prop_js_same_enc_sign_cert, Boolean.toString(true));
         config.setProperty(Constants.prop_js_hash, "SHA-256");
         config.setProperty(Constants.prop_js_modulusLength, "2048");
         config.setProperty(Constants.prop_js_enc_name, "AES-CBC");
@@ -56,6 +56,10 @@ public final class Configuration extends ConfigurationBase {
         config.setProperty(Constants.prop_server_days, Integer.toString(10 * oneYear));
         config.setProperty(Constants.prop_signer_days, Integer.toString(10 * oneYear));
         config.setProperty(Constants.prop_certificate_days, Integer.toString(1));
+
+        config.setProperty(Constants.prop_js_authURL, "http://127.0.0.1:8080/login");
+        config.setProperty(Constants.prop_js_messageURL, "http://127.0.0.1:8080/message");
+        config.setProperty(Constants.prop_js_renewURL, "http://127.0.0.1:8080/renew");
 
         switch (keyType) {
             case EC:
